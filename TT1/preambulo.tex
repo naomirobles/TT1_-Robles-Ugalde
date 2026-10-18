@@ -1,0 +1,211 @@
+% =====================================================================
+%  preambulo.tex
+%  Paquetes, configuración de página y estilo para bloques de código.
+%  Se carga desde main.tex con \input{preambulo}
+% =====================================================================
+
+% ---------------------------------------------------------------------
+%  Codificación, idioma y fuentes
+% ---------------------------------------------------------------------
+\usepackage[T1]{fontenc}          % acentos y guiones correctos en español
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}              % versión vectorial de Computer Modern
+\usepackage[spanish,es-tabla]{babel}
+\usepackage{titlesec}
+
+% ---------------------------------------------------------------------
+%  Geometría de página y encabezados
+% ---------------------------------------------------------------------
+\usepackage[a4paper, width=150mm, top=25mm, bottom=25mm, bindingoffset=6mm]{geometry}
+\usepackage{fancyhdr}
+\setlength{\headheight}{15.4pt}   % evita el warning de fancyhdr
+\pagestyle{fancy}
+\fancyhead{}
+\fancyhead[LO,LE]{\leftmark}
+\fancyfoot{}
+\fancyfoot[CO,CE]{\thepage}
+\renewcommand{\headrulewidth}{0.2pt}
+\renewcommand{\footrulewidth}{0.2pt}
+
+% ---------------------------------------------------------------------
+%  Colores (antes que otros paquetes que puedan cargarlo)
+% ---------------------------------------------------------------------
+\usepackage[dvipsnames,table]{xcolor}
+% Color para los diagramas TikZ (verde esmeralda)
+\definecolor{emerald}{RGB}{5,150,105}
+
+% ---------------------------------------------------------------------
+%  Matemáticas y símbolos
+% ---------------------------------------------------------------------
+\usepackage{amsmath}
+\numberwithin{table}{section}
+\numberwithin{figure}{section}
+\usepackage{amssymb}
+\usepackage{textcomp}
+\usepackage{siunitx}
+
+% ---------------------------------------------------------------------
+%  Tablas
+% ---------------------------------------------------------------------
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{multirow}
+\usepackage{bigstrut}
+\usepackage{booktabs}
+\usepackage{tabularx}
+
+% ---------------------------------------------------------------------
+%  Figuras y páginas horizontales
+% ---------------------------------------------------------------------
+\usepackage{graphicx}
+\usepackage{adjustbox}
+\usepackage{float}
+\usepackage{lscape}
+\usepackage{pdflscape}
+\usepackage{subcaption}
+
+% ---------------------------------------------------------------------
+%  Diagramas con TikZ
+% ---------------------------------------------------------------------
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, fit, backgrounds, calc, shadows}
+
+% ---------------------------------------------------------------------
+%  Bibliografía (formato IEEE: citas numéricas entre corchetes)
+% ---------------------------------------------------------------------
+\usepackage{notoccite}
+\usepackage[numbers, sort&compress]{natbib}
+\usepackage[nottoc]{tocbibind}
+
+% ---------------------------------------------------------------------
+%  Apéndices
+% ---------------------------------------------------------------------
+\usepackage[toc,page]{appendix}
+
+% ---------------------------------------------------------------------
+%  Código fuente: paquete listings + estilo "codigo"
+% ---------------------------------------------------------------------
+\usepackage{listings}
+
+% Paleta inspirada en la imagen de referencia
+\definecolor{codFondo}{HTML}{FAFAFB}      % fondo casi blanco
+\definecolor{codMarco}{HTML}{D0D0D5}      % borde gris claro
+\definecolor{codTexto}{HTML}{2B2B2B}      % variables e identificadores
+\definecolor{codPalabra}{HTML}{5B8BC9}    % def, if, else, return...
+\definecolor{codFuncion}{HTML}{4A7FC1}    % nombres de funciones (emph)
+\definecolor{codNumero}{HTML}{6AA56A}     % números
+\definecolor{codComentario}{HTML}{8C8C8C} % comentarios
+\definecolor{codCadena}{HTML}{C1693C}     % cadenas de texto
+\definecolor{codNumLinea}{HTML}{A0A0A0}   % números de línea
+
+% Colorea los dígitos solo cuando están en código (no en comentarios ni cadenas)
+\makeatletter
+\newcommand{\codDigito}[1]{%
+  \ifnum\lst@mode=\lst@Pmode\relax
+    {\color{codNumero}#1}%
+  \else
+    #1%
+  \fi
+}
+\makeatother
+
+% Mostrar hasta el nivel 4 numerado
+\setcounter{secnumdepth}{4}
+\setcounter{tocdepth}{4} % el índice muestra hasta el nivel 4 (paragraph)
+
+% Formato de \paragraph en línea nueva
+\titleformat{\paragraph}
+  {\normalfont\normalsize\bfseries}
+  {\theparagraph}{1em}{}
+\titlespacing*{\paragraph}{0pt}{3.25ex plus 1ex minus .2ex}{1.5ex plus .2ex}
+
+\lstdefinestyle{codigo}{
+  language=Python,
+  % --- Tipografía y colores ---
+  basicstyle=\ttfamily\small\color{codTexto},
+  identifierstyle=\color{codTexto},
+  keywordstyle=\color{codPalabra},
+  keywordstyle=[2]\color{codPalabra},
+  emphstyle=\color{codFuncion},
+  commentstyle=\color{codComentario},
+  stringstyle=\color{codCadena},
+  % --- Palabras reservadas adicionales ---
+  morekeywords=[2]{True, False, None, self, nonlocal, async, await},
+  % --- Marco y fondo ---
+  backgroundcolor=\color{codFondo},
+  frame=single,
+  frameround=tttt,          % las cuatro esquinas redondeadas
+  framerule=0.6pt,
+  rulecolor=\color{codMarco},
+  framesep=8pt,
+  xleftmargin=9pt,
+  xrightmargin=9pt,
+  aboveskip=1em,
+  belowskip=1em,
+  % --- Espaciado y cortes de línea ---
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false,
+  tabsize=4,
+  breaklines=true,
+  breakatwhitespace=true,
+  postbreak=\mbox{\textcolor{codComentario}{$\hookrightarrow$}\space},
+  upquote=true,
+  % --- Números de línea (cambia a "left" si los quieres) ---
+  numbers=none,
+  numberstyle=\tiny\color{codNumLinea},
+  % --- Acentos en español y coloreado de números ---
+  extendedchars=true,
+  literate=
+    {á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+    {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
+    {ñ}{{\~n}}1 {Ñ}{{\~N}}1 {ü}{{\"u}}1 {Ü}{{\"U}}1
+    {¿}{{?`}}1 {¡}{{!`}}1
+    {0}{{\codDigito{0}}}1 {1}{{\codDigito{1}}}1 {2}{{\codDigito{2}}}1
+    {3}{{\codDigito{3}}}1 {4}{{\codDigito{4}}}1 {5}{{\codDigito{5}}}1
+    {6}{{\codDigito{6}}}1 {7}{{\codDigito{7}}}1 {8}{{\codDigito{8}}}1
+    {9}{{\codDigito{9}}}1
+}
+
+% Estilo por defecto para todos los lstlisting
+\lstset{style=codigo}
+
+% ---------------------------------------------------------------------
+%  Nombres en español
+%  1) Se agregan a los nombres que babel activa para el español.
+%  2) Se fuerzan otra vez al empezar el documento, para que ningún
+%     paquete los regrese al inglés.
+% ---------------------------------------------------------------------
+\addto\captionsspanish{%
+  \def\contentsname{Índice general}%
+  \def\listfigurename{Índice de figuras}%
+  \def\listtablename{Índice de tablas}%
+  \def\tablename{Tabla}%
+  \def\refname{Referencias}%
+  \def\appendixname{Apéndice}%
+  \def\appendixtocname{Apéndices}%
+  \def\appendixpagename{Apéndices}%
+}
+
+\AtBeginDocument{%
+  \renewcommand{\contentsname}{Índice general}%
+  \renewcommand{\listfigurename}{Índice de figuras}%
+  \renewcommand{\listtablename}{Índice de tablas}%
+  \renewcommand{\tablename}{Tabla}%
+  \renewcommand{\refname}{Referencias}%
+  \renewcommand{\appendixname}{Apéndice}%
+  \renewcommand{\appendixtocname}{Apéndices}%
+  \renewcommand{\appendixpagename}{Apéndices}%
+  \renewcommand{\lstlistingname}{Código}%
+  \renewcommand{\lstlistlistingname}{Índice de códigos}%
+}
+
+% ---------------------------------------------------------------------
+%  Enlaces (hyperref debe ir al final)
+% ---------------------------------------------------------------------
+\usepackage{url}
+\usepackage{hyperref}
+
+\sloppy
+\hyphenpenalty=10000
+\exhyphenpenalty=10000

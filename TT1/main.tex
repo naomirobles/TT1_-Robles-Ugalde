@@ -1,0 +1,27 @@
+\documentclass[12pt,twoside]{article}
+\input{preambulo} % paquetes, formato de página y estilo de código
+
+\begin{document}
+\bibliographystyle{achemso} % estilo de citas, cámbialo si es necesario
+
+\include{portada} % portada
+
+\tableofcontents % índice general (el título en español se define en preambulo.tex)
+
+%\include{Thanks-abstact} % Resumen y agradecimientos
+
+% Capítulos: usa \include{archivo} para cada .tex
+\include{intro}
+\include{Cap2}
+\include{Cap3}
+\include{Cap4}
+\include{Conclusiones}
+\include{Experimental}
+\bibliography{bib_tt1}
+
+% Anexos
+% \begin{appendices}
+% \include{Anexos}
+% \end{appendices}
+
+\end{document}

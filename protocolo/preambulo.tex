@@ -1,0 +1,39 @@
+\usepackage[utf8]{inputenc}
+\usepackage[spanish, provide=*]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{times} % Times New Roman
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{array}
+\usepackage{colortbl}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{float}
+\usepackage{tabularx}
+\usepackage[most]{tcolorbox} % Para el cuadro gris con bordes
+\usepackage{calc}
+\usepackage[hidelinks]{hyperref}
+\usepackage{enumitem}
+\usepackage[style=ieee]{biblatex}% Para cálculos de espacio
+
+% --- Configuración de Títulos según CATT ---
+% Títulos numerados, Times New Roman, Tamaño 12, Negrita
+\titleformat{\section}
+  {\normalfont\fontsize{12}{14}\bfseries}{\thesection.}{0.5em}{}
+
+% Subtítulos (opcional, usualmente 10 o 11pt negrita)
+\titleformat{\subsection}
+  {\normalfont\fontsize{10}{12}\bfseries}{\thesubsection.}{0.5em}{}
+
+% --- Configuración de Bibliografía IEEE ---
+\addbibresource{referencias.bib}
+
+
+
+% --- Otros ---
+\definecolor{gris30}{gray}{0.7}
+\singlespacing
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
