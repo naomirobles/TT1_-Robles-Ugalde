@@ -414,6 +414,13 @@ Se harán tres comparaciones, todas con las mismas métricas y el mismo conjunto
     \item Ambas configuraciones frente al traductor basado en reglas, que funciona como línea base.
     \item Resultados frente a los sistemas de ToPicto 2026 (Tabla~\ref{tab:sota-text-to-picto}), tomando en cuenta la diferencia de tamaño entre modelos y la conversión de identificadores a términos.
 \end{itemize}
+
+\subsection{Conjunto de prueba con anotación humana}
+De manera complementaria, se contempla construir un conjunto de prueba en español anotado por personas. Las referencias de \textit{Propicto-Orfeo} se generaron con una gramática basada en reglas \cite{macaire2024}, por lo que las métricas descritas miden qué tan bien el modelo reproduce esas reglas. Un conjunto anotado por personas permitiría comparar además las salidas del modelo con las secuencias que una persona elegiría para expresar la misma oración.
+
+Para construirlo, participantes voluntarios seleccionarán, mediante una herramienta web sencilla con buscador y categorías de pictogramas de ARASAAC, la secuencia que mejor exprese cada oración. Las oraciones se tomarán del conjunto de prueba de \textit{Propicto-Orfeo} traducido al español, de modo que cada una cuente con dos referencias: la generada por reglas y la elegida por personas. Cada oración será anotada por más de una persona, lo que permitirá medir el grado de acuerdo entre anotadores, y la tarea se apoyará en una guía breve que unifique criterios, por ejemplo, cómo representar el tiempo verbal o qué hacer cuando no existe un pictograma adecuado.
+
+La evaluación principal del modelo no depende de este conjunto y se realizará con las referencias de \textit{Propicto-Orfeo}. El conjunto con anotación humana se usará únicamente como evaluación complementaria, en la medida en que se complete.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \clearpage
 \section{Despliegue}
