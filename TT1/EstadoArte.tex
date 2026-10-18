@@ -1,0 +1,187 @@
+\section{Estado del arte}
+\label{sec:estado-arte}
+
+En este capítulo se revisan los trabajos previos sobre traducción automática de texto a pictogramas. La revisión se organiza en dos partes. La primera recorre la evolución de la tarea: desde los primeros sistemas basados en reglas y recursos léxicos, pasando por su formulación como traducción automática neuronal, hasta la creación de un corpus y una tarea compartida que hoy sirven como referencia común. La segunda parte analiza los sistemas más recientes, presentados en la tarea ImageCLEFtoPicto, y compara su desempeño con las mismas métricas con las que se evaluará el presente trabajo. Al final de cada parte, los hallazgos se sintetizan en una tabla.
+
+\subsection{Evolución de la traducción de texto a pictogramas}
+
+El primer planteamiento del problema como una tarea de traducción se encuentra en el trabajo de Mihalcea y Leong \cite{mihalcea2008}. Su sistema traducía oraciones simples en inglés a secuencias de imágenes obtenidas de motores de búsqueda y de colecciones de \textit{clipart}\footnote{\textit{Clipart}: colecciones de ilustraciones prediseñadas, generalmente dibujos sencillos, que se distribuyen listas para insertarse en documentos.}. Para evaluarlo, midieron qué tanto comprendían los lectores el mensaje a partir de las imágenes y lo compararon con la comprensión lograda con la salida de un sistema de traducción automática; la representación visual alcanzó un nivel de comprensión comparable. Este trabajo mostró que una secuencia de imágenes puede transmitir el contenido de una oración, aunque las imágenes no provenían de un sistema de CAA, el sistema se limitaba a oraciones simples y la evaluación no incluyó a personas con dificultades del lenguaje.
+
+La primera línea de trabajo dirigida específicamente a la CAA es Text2Picto, de Vandeghinste et al.\ \cite{vandeghinste2017}. Este sistema convierte texto en neerlandés a los conjuntos pictográficos Sclera y Beta\footnote{Sclera y Beta son dos colecciones de pictogramas usadas en CAA en Bélgica y los Países Bajos. Sclera está formada por pictogramas sencillos en blanco y negro, mientras que Beta emplea dibujos a color.} mediante reglas: realiza un análisis lingüístico superficial del texto, consulta los \textit{synsets}\footnote{Un \textit{synset} (del inglés \textit{synonym set}) es un grupo de palabras que comparten un mismo significado; por ejemplo, «coche» y «automóvil». Es la unidad básica de WordNet y de bases léxicas similares, en las que cada \textit{synset} se enlaza con otros mediante relaciones de significado.} de las palabras de contenido en la base léxica Cornetto\footnote{Cornetto es una base de datos léxica del neerlandés, organizada en \textit{synsets} de forma similar a WordNet.} y busca el pictograma semánticamente más cercano. Al apoyarse en relaciones semánticas, puede representar palabras que no tienen un pictograma propio, y su comportamiento es interpretable sin necesidad de un corpus paralelo. Se evaluó frente a una línea base que buscaba coincidencias entre el texto y los nombres de archivo de los pictogramas. Su principal costo es que cada pictograma debe enlazarse manualmente con la base léxica, la traducción se realiza palabra por palabra y la desambiguación de sentidos es limitada.
+
+Sevens et al.\ \cite{sevens2015} extendieron Text2Picto al inglés y al español reutilizando la misma arquitectura basada en recursos léxico-semánticos. Al comparar su desempeño con el del sistema original en neerlandés, mostraron que el enfoque se transfiere entre idiomas, y este fue el primer Text2Picto con entrada en inglés y en español, aunque todavía con los conjuntos Sclera y Beta y con las limitaciones propias de las reglas.
+
+En el ámbito hispanohablante, Aratraductor \cite{bautista2017} traduce texto en español a pictogramas de ARASAAC e incorpora técnicas de procesamiento de lenguaje natural para mejorar la selección de pictogramas: usa análisis sintáctico para identificar los lemas y n-gramas para detectar frases hechas. Es un antecedente directo del presente trabajo por combinar el español con ARASAAC, si bien su funcionamiento sigue dependiendo de reglas y recursos definidos manualmente.
+
+Norré et al.\ \cite{norre2021} adaptaron Text2Picto al francés y a ARASAAC, enlazando de forma automática los pictogramas y sus metadatos con los \textit{synsets} de dos WordNets del francés. El sistema se evaluó de forma automática y manual en varios corpus, entre ellos uno de comunicación entre médicos y pacientes. Con ello integraron ARASAAC, el conjunto pictográfico que hoy usa la tarea ImageCLEFtoPicto, y mostraron que el sistema puede extenderse a nuevos idiomas y conjuntos de pictogramas; los propios autores señalan la simplificación del texto y la desambiguación como los principales frentes de mejora.
+
+El cambio de paradigma llegó con Mutal et al.\ \cite{mutal2022}, primeros en formular la tarea como traducción automática neuronal. Su trabajo se desarrolla en el contexto de BabelDr, un sistema de traducción médica creado en la Universidad de Ginebra para la atención en urgencias. En BabelDr, el médico formula sus preguntas en francés, el sistema las relaciona con una de sus oraciones predefinidas, que ya fueron traducidas por personas, y se la presenta al paciente en su idioma. Sobre este sistema, los autores traducen texto en francés a una glosa semántica basada en UMLS\footnote{UMLS (\textit{Unified Medical Language System}) es un sistema de vocabularios biomédicos que asigna un identificador único a cada concepto médico, independientemente del idioma o del término con que se nombre.}, que funciona como lenguaje pivote a partir del cual se generan los pictogramas. Al comparar distintas arquitecturas de traducción neuronal, el mejor resultado lo obtuvo un sistema multilingüe. La glosa pivote separa el análisis del idioma de la elección de pictogramas, lo que facilita generar pictogramas para pacientes de distintas lenguas. Su dominio se restringe al triaje médico y depende de las oraciones pretraducidas de BabelDr.
+
+Para entrenar modelos neuronales de forma general hacía falta un corpus de gran tamaño con oraciones alineadas a secuencias de pictogramas. Macaire et al.\ \cite{macaire2024} construyeron Propicto, el primer corpus en cualquier idioma que alinea voz, texto y pictogramas, con 230 horas de habla en francés. Las secuencias de pictogramas se generaron con una gramática basada en reglas y un vocabulario restringido vinculado a ARASAAC, y los autores realizaron experimentos de traducción de voz a pictogramas con un modelo en cascada que incluye reconocimiento automático del habla. Este corpus hizo posible entrenar modelos secuencia a secuencia supervisados; al mismo tiempo, como las referencias provienen de la gramática por reglas, los modelos aprenden a reproducir sus convenciones.
+
+Sobre ese corpus se organizó la tarea compartida ImageCLEFtoPicto. En su primera edición, en 2024 \cite{ionescu2024}, los participantes debían generar secuencias de términos de pictogramas a partir de transcripciones orales en francés del corpus TCOF (\textit{Traitement de Corpus Oraux en Français}), una colección de grabaciones de habla espontánea en francés, transcritas manualmente, que incluye conversaciones entre adultos y entre adultos y niños, y se evaluaron con BLEU, METEOR y PictoER. Fue el primer benchmark público con datos, formato y métricas comunes, aunque solo en francés y con una única referencia por oración. La edición 2025 \cite{macaire2025overview} incorporó las subtareas Text-to-Picto y Speech-to-Picto y amplió los dominios a habla leída y espontánea, con temas médicos y cotidianos; el mejor equipo alcanzó 76.98 de sacreBLEU en Text-to-Picto. La edición 2026 \cite{Hjuler2026} llevó la tarea al inglés, con las subtareas Text-to-Picto y predicción del siguiente pictograma, y reunió a diez equipos, constituyéndose como el primer benchmark comunitario para este idioma. Todos los equipos de Text-to-Picto ajustaron Transformers codificador-decodificador preentrenados, principalmente de la familia T5, y los mejores sistemas atendieron la fragmentación de términos compuestos y la integridad de los datos. Los organizadores observan que los mejores resultados quedan a fracciones de punto entre sí, y precisan que el texto fuente se tradujo del francés con un modelo de lenguaje y que las referencias se derivaron de forma automática, por lo que las métricas miden la similitud con esas referencias más que la adecuación comunicativa.
+
+En conjunto, esta revisión muestra dos etapas en la historia de la tarea. Los primeros sistemas \cite{vandeghinste2017, sevens2015, bautista2017, norre2021} traducían palabra por palabra apoyándose en recursos léxicos como WordNet y en reglas escritas a mano; su salida era interpretable, pero cada idioma o conjunto de pictogramas nuevo exigía volver a enlazar el vocabulario. A partir de \cite{mutal2022} la tarea se formula como traducción automática neuronal, y la publicación del corpus Propicto \cite{macaire2024} hizo posible entrenar modelos supervisados con pares alineados de texto y pictogramas. Sobre ese corpus se organizó la tarea compartida ImageCLEFtoPicto \cite{ionescu2024, macaire2025overview, Hjuler2026}, que fija los datos y las métricas con las que hoy se comparan los sistemas. Estos hallazgos se resumen en la Tabla~\ref{tab:hitos-text-to-picto}, que presenta, para cada trabajo, su enfoque, la entrada y salida del sistema, la forma de evaluación, sus fortalezas y sus limitaciones.
+
+% Define un ancho fijo por columna, alineado a la izquierda y con salto de línea automático
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Preámbulo: \usepackage{pdflscape, longtable, booktabs, array, multirow}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{landscape}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.3}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+
+\begin{longtable}{L{3cm} L{1.3cm} L{3.4cm} L{2.6cm} L{2.4cm} L{3.7cm} L{3.7cm}}
+\caption{Hitos en la traducción automática de texto a pictogramas.}
+\label{tab:hitos-text-to-picto} \\
+\toprule
+\textbf{Trabajo} & \textbf{Año} & \textbf{Enfoque} & \textbf{Entrada $\rightarrow$ salida} & \textbf{Evaluación} & \textbf{Fortalezas} & \textbf{Limitaciones} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Trabajo} & \textbf{Año} & \textbf{Enfoque} & \textbf{Entrada $\rightarrow$ salida} & \textbf{Evaluación} & \textbf{Fortalezas} & \textbf{Limitaciones} \\
+\midrule
+\endhead
+\midrule
+\multicolumn{7}{r}{\textit{Continúa en la siguiente página}} \\
+\endfoot
+\bottomrule
+\endlastfoot
+
+Toward Communicating Simple Sentences Using Pictorial Representations \cite{mihalcea2008} & 2008 &
+Traducción de oraciones simples a imágenes obtenidas de motores de búsqueda de imágenes y colecciones de \textit{clipart} &
+Texto en inglés $\rightarrow$ secuencia de imágenes (sin un conjunto pictográfico cerrado) &
+Comprensión de lectores, comparada contra la salida de un sistema de traducción automática &
+Primer planteamiento del problema como una tarea de traducción; la representación visual logró un nivel de comprensión comparable al de un sistema de TA &
+Las imágenes no pertenecen a un sistema de CAA; sólo cubre oraciones simples; no evalúa con usuarios con dificultades de lenguaje \\
+\midrule
+
+Translating Text into Pictographs (Text2Picto) \cite{vandeghinste2017} & 2015 (impreso 2017) &
+Sistema basado en reglas: análisis lingüístico superficial del texto, consulta de los \textit{synsets} de las palabras de contenido en Cornetto y búsqueda del pictograma semánticamente más cercano &
+Texto en neerlandés $\rightarrow$ pictogramas Sclera y Beta &
+Comparación contra un baseline de coincidencia de cadenas entre el texto y los nombres de archivo de los pictogramas &
+Interpretable; no requiere corpus paralelo; representa palabras sin pictograma propio mediante relaciones semánticas &
+Depende de enlazar manualmente pictogramas con una base léxica; traducción palabra por palabra; desambiguación de sentidos limitada \\
+\midrule
+
+Extending a Dutch Text-to-Pictograph Converter to English and Spanish \cite{sevens2015} & 2015 &
+Extensión de Text2Picto a nuevos idiomas de entrada, reutilizando la arquitectura basada en recursos léxico-semánticos &
+Texto en inglés y en español $\rightarrow$ pictogramas Sclera y Beta &
+Comparación con el desempeño del sistema original en neerlandés &
+Muestra que la arquitectura se transfiere entre idiomas; primer Text2Picto con entrada en inglés y en español &
+Hereda las limitaciones del enfoque por reglas; no usa ARASAAC \\
+\midrule
+
+Aratraductor: Text to Pictogram Translation Using Natural Language Processing Techniques \cite{bautista2017} & 2017 &
+Traductor de texto a pictogramas que incorpora técnicas de PLN para mejorar la selección de pictogramas &
+Texto en español $\rightarrow$ pictogramas ARASAAC &
+\textit{Por verificar} &
+Antecedente directo en español y con ARASAAC &
+Enfoque basado en reglas y recursos; la evaluación no está verificada en esta revisión \\
+\midrule
+
+Extending a Text-to-Pictograph System to French and to Arasaac \cite{norre2021} & 2021 &
+Adaptación de Text2Picto: enlace automático de los pictogramas ARASAAC y sus metadatos a \textit{synsets} de dos WordNets del francés &
+Texto en francés $\rightarrow$ pictogramas ARASAAC &
+Evaluación automática y manual en varios corpus, incluido uno de comunicación médico-paciente &
+Integra ARASAAC, el conjunto que usa ImageCLEFtoPicto; muestra que el sistema se extiende a nuevos idiomas y conjuntos de pictogramas &
+Hereda las limitaciones del enfoque por reglas; los autores señalan margen de mejora en simplificación y desambiguación \\
+\midrule
+
+A Neural Machine Translation Approach to Translate Text to Pictographs in a Medical Speech Translation System -- The BabelDr Use Case \cite{mutal2022} & 2022 &
+Traducción automática neuronal hacia una glosa semántica basada en UMLS, usada como pivote para generar pictogramas; el mejor resultado lo obtuvo un sistema NMT multilingüe &
+Texto en francés (dominio médico) $\rightarrow$ glosa UMLS $\rightarrow$ pictogramas &
+Comparación entre arquitecturas de traducción neuronal &
+Primer trabajo en formular la tarea como traducción neuronal; la glosa pivote separa el análisis del idioma de la elección de pictogramas &
+Dominio restringido al triaje médico; depende de las oraciones pretraducidas de BabelDr \\
+\midrule
+
+A Multimodal French Corpus of Aligned Speech, Text, and Pictogram Sequences for Speech-to-Pictogram Machine Translation (Propicto) \cite{macaire2024} & 2024 &
+Gramática de pictogramas basada en reglas con vocabulario restringido, usada para construir un corpus alineado; experimentos con un modelo en cascada que incluye reconocimiento automático del habla &
+Voz y texto en francés $\rightarrow$ términos en francés vinculados a pictogramas ARASAAC &
+Experimentos de traducción voz-pictograma en cascada &
+Primer corpus alineado de voz, texto y pictogramas en cualquier idioma (230 horas); hace posible entrenar modelos seq2seq supervisados &
+Las referencias se generan con la gramática por reglas, así que los modelos aprenden a reproducir sus convenciones \\
+\midrule
+
+Overview of the ImageCLEF 2024 (1.ª edición de ToPicto) \cite{ionescu2024} & 2024 &
+Tarea compartida: generación de secuencias de términos de pictogramas a partir de transcripciones orales del corpus TCOF &
+Texto en francés $\rightarrow$ términos en francés vinculados a pictogramas ARASAAC &
+BLEU, METEOR y PictoER &
+Primer benchmark público con datos, formato y métricas comunes &
+Sólo francés; las métricas comparan contra una única referencia \\
+\midrule
+
+Overview of the 2025 ImageCLEFtoPicto Task \cite{macaire2025overview} & 2025 &
+Tarea compartida con las subtareas Text-to-Picto y Speech-to-Picto &
+Texto en francés $\rightarrow$ términos en francés vinculados a pictogramas ARASAAC &
+sacreBLEU, METEOR y PictoER &
+Amplía los dominios (habla leída y espontánea, temas médicos y cotidianos); el mejor equipo alcanzó 76.98 de sacreBLEU en Text-to-Picto &
+Sigue limitada al francés \\
+\midrule
+
+Overview of the 2026 ImageCLEFtoPicto Task \cite{Hjuler2026} & 2026 &
+Tarea compartida con las subtareas Text-to-Picto y predicción del siguiente pictograma; todos los equipos de Text-to-Picto ajustaron transformers codificador-decodificador preentrenados, principalmente de la familia T5 &
+Texto en inglés $\rightarrow$ términos en inglés vinculados a pictogramas ARASAAC &
+sacreBLEU, METEOR y PictoER &
+Primer benchmark comunitario para inglés (10 equipos); los mejores sistemas atendieron la fragmentación de tokens compuestos y la integridad de los datos &
+Los mejores resultados quedan a fracciones de punto entre sí, lo que sugiere un techo de desempeño; el texto fuente se tradujo del francés con un LLM y las referencias se derivaron automáticamente, por lo que las métricas no miden adecuación comunicativa \\
+\end{longtable}
+
+
+
+\end{landscape}
+
+\subsection{Sistemas recientes en la tarea ImageCLEFtoPicto}
+
+Las dos últimas ediciones de ImageCLEFtoPicto permiten comparar sistemas evaluados sobre los mismos datos y con las mismas métricas que se usarán en este trabajo: sacreBLEU y METEOR, en las que un valor más alto es mejor, y PictoER, una tasa de error en la que un valor más bajo es mejor.
+
+En la edición 2025, con datos en francés, el mejor resultado lo obtuvo el equipo majahj, que ajustó modelos T5 y cuya mejor variante, basada en T5-large, alcanzó 76.98 de sacreBLEU, 88.66 de METEOR y 13.48 de PictoER \cite{Hjuler2025Parlez}. El mismo artículo reporta una variante distinta, enviada por el equipo indira, que obtuvo 52.41 de sacreBLEU, 74.50 de METEOR y 29.23 de PictoER.
+
+En la edición 2026, con datos en inglés, el mejor sacreBLEU fue el del equipo psp075, que comparó FLAN-T5-base contra una línea base con BART-base y obtuvo 52.55 de sacreBLEU, 71.69 de METEOR y 31.48 de PictoER \cite{Sudharshan2026}. El equipo jlcuad ajustó T5-base y exploró de forma sistemática el prefijo de tarea, la semilla, la tasa de aprendizaje y el tamaño de lote, con 52.00, 71.02 y 31.99, respectivamente \cite{GuzmanColomina2026}. El equipo gokul\_n\_v partió de BART-base y se centró en la descontaminación de los datos y en la ampliación del vocabulario con los términos compuestos más frecuentes, con 52.21, 71.04 y 32.12 \cite{Gokul2026}. Los equipos kaiyili y fuchuanye, que comparten artículo, ajustaron T5 y obtuvieron 51.34, 70.40 y 32.55 \cite{Li2026}. El equipo sami\_haq combinó T5-small con información visual (\textit{grounding} visual) mediante \textit{embeddings} congelados de CLIP, incorporados a través de una pérdida auxiliar, y obtuvo 51.33, 70.36 y 32.75 \cite{UlHaq2026}. Por último, dos equipos intervinieron directamente en el vocabulario o en la decodificación: lekshmivitscope inyectó 2,041 términos compuestos como tokens en el vocabulario de T5, con 28.76, 63.92 y 38.84 \cite{Adithiyaa2026}, y varghesekjames restringió la búsqueda por haz con un árbol de prefijos (\textit{Trie}) para generar solo términos válidos, con 31.23, 61.18 y 53.77 \cite{James2026}.
+
+Los resultados de 2025 y 2026 no se pueden comparar directamente, porque la primera edición usó francés y la segunda un conjunto en inglés. Dentro de la edición 2026, en cambio, el patrón es claro. Los seis mejores equipos ajustaron modelos codificador-decodificador de las familias T5 o BART, y sus valores de sacreBLEU quedan entre 51.33 y 52.55, una diferencia de poco más de un punto. Las variaciones de hiperparámetros, el cambio entre T5 y BART y la incorporación de información visual mediante CLIP \cite{UlHaq2026} apenas movieron el resultado. Los dos equipos que intervinieron directamente en el vocabulario o en la decodificación \cite{Adithiyaa2026, James2026} obtuvieron resultados bastante menores.
+
+Los propios organizadores interpretan esta concentración como señal de que la tarea se acerca a un techo de desempeño con los enfoques de modelado actuales \cite{Hjuler2026}. Si ajustar otro modelo preentrenado del mismo tipo ya no produce mejoras apreciables, conviene preguntarse de dónde vienen las secuencias que esos modelos aprenden a reproducir. Las referencias del conjunto de datos no fueron escritas por usuarios de CAA. Se generaron con la gramática de pictogramas basada en reglas que se describe en la construcción del corpus Propicto-Orfeo \cite{macaire2024}, y en la edición 2026 el texto fuente se tradujo además del francés al inglés con un modelo de lenguaje. Los modelos, por lo tanto, aprenden las convenciones de esa gramática, y las métricas premian qué tan bien las imitan.
+
+Los resultados de todos los equipos se resumen en la Tabla~\ref{tab:sota-text-to-picto}.
+
+\begin{landscape}
+
+\begin{table}[H]
+\centering
+\caption{Sistemas de la tarea Text-to-Picto de ImageCLEFtoPicto: arquitectura, desempeño y artículo de cada equipo\protect\footnotemark}
+\label{tab:sota-text-to-picto}
+\small
+\begin{tabular}{@{}llp{5.8cm}rrr@{}}
+\toprule
+\textbf{Edición} & \textbf{Equipo} & \textbf{Arquitectura} & \textbf{sacreBLEU} & \textbf{METEOR} & \textbf{PictoER} \\
+\midrule
+\multirow{2}{*}{2025 (FR)}
+ & majahj & T5 fine-tuneado (mejor variante T5-large) \cite{Hjuler2025Parlez} & 76.98 & 88.66 & 13.48 \\
+ & indira & T5 fine-tuneado (mismo paper, variante distinta) \cite{Hjuler2025Parlez} & 52.41 & 74.50 & 29.23 \\
+\midrule
+\multirow{9}{*}{2026 (EN)}
+ & psp075          & FLAN-T5-base vs.\ baseline BART-base \cite{Sudharshan2026} & 52.55 & 71.69 & 31.48 \\
+ & jlcuad          & T5-base; barrido de prefijo de tarea, seed, learning rate, batch size \cite{GuzmanColomina2026} & 52.00 & 71.02 & 31.99 \\
+ & gokul\_n\_v     & \texttt{facebook/bart-base}; descontaminaci\'on de datos y aumento de vocabulario \cite{Gokul2026} & 52.21 & 71.04 & 32.12 \\
+ & kaiyili         & T5 fine-tuneado \cite{Li2026} & 51.34 & 70.40 & 32.55 \\
+ & fuchuanye       & T5 fine-tuneado (mismo paper que kaiyili) \cite{Li2026} & 51.34 & 70.40 & 32.55 \\
+ & sami\_haq       & T5-small + \textit{grounding} visual con embeddings CLIP congelados (p\'erdida auxiliar) \cite{UlHaq2026} & 51.33 & 70.36 & 32.75 \\
+  & lekshmivitscope & T5 con inyecci\'on de 2{,}041 tokens compuestos en el vocabulario \cite{Adithiyaa2026} & 28.76 & 63.92 & 38.84 \\
+ & varghesekjames  & Decodificaci\'on restringida por Trie (prefix-tree) sobre \textit{beam search} \cite{James2026} & 31.23 & 61.18 & 53.77 \\
+\bottomrule
+\end{tabular}
+\end{table}
+\footnotetext{Métricas reportadas en las fuentes originales. Los artículos de la edición 2026 se obtuvieron del sitio de \textit{staging} de CEUR-WS, previo a la asignación oficial de volumen y DOI (congreso: 21--24 de septiembre de 2026).}
+\end{landscape}
+
+\subsection{Aportación del presente trabajo frente al estado del arte}
+
+A partir de esta revisión, el presente trabajo explora una dirección distinta a la de los sistemas de ImageCLEFtoPicto. En lugar de ajustar un modelo codificador-decodificador para generar términos en un solo idioma, se ajusta un modelo de lenguaje multilingüe de mayor tamaño para que genere directamente los identificadores de ARASAAC, tratados como un idioma nuevo, a partir de texto en cinco idiomas. Además, se comparan dos formas de representar esos identificadores en el vocabulario del modelo, lo que permite medir de forma controlada el efecto de ampliar el vocabulario, una pregunta que los resultados de 2026 dejan abierta. Los detalles de esta propuesta se describen en los capítulos \ref{sec:ingenieria-datos} y \ref{sec:ingenieria-modelo}.

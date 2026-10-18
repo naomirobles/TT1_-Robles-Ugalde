@@ -1,0 +1,22 @@
+\section{Discusión preliminar}
+\label{sec:discusion}
+
+En este capítulo se discuten los resultados obtenidos hasta esta etapa del trabajo terminal y su relación con el objetivo general. Se analizan los hallazgos de la revisión del estado del arte, las decisiones tomadas sobre los datos a partir de la prueba piloto, el diseño del modelo de traducción y los pasos que guiarán la siguiente etapa del proyecto.
+
+\subsection{Hallazgos de la revisión del estado del arte}
+
+La revisión del estado del arte muestra que la traducción de texto a pictogramas pasó de sistemas basados en reglas y recursos léxicos a modelos neuronales entrenados con corpus alineados. En la edición 2026 de ImageCLEFtoPicto, los sistemas mejor evaluados ajustaron modelos codificador-decodificador de las familias T5 y BART y obtuvieron valores de sacreBLEU muy cercanos entre sí, entre 51.33 y 52.55 \cite{Hjuler2026}. Esta concentración de resultados indica que variar el modelo preentrenado o sus hiperparámetros ya aporta poco, y orienta este trabajo hacia dos aspectos menos explorados: la forma en que el modelo representa los pictogramas y la cobertura de varios idiomas de entrada.
+
+La revisión también muestra que las referencias de los corpus disponibles se generaron con una gramática basada en reglas \cite{macaire2024}. Esto se tendrá presente al interpretar las métricas automáticas, que miden qué tan cerca está una salida de esas referencias. Por ello, además de las métricas oficiales, el análisis de resultados incluirá una revisión cualitativa de ejemplos representativos.
+
+\subsection{Decisiones sobre los datos}
+
+El análisis de los conjuntos de datos llevó a elegir \textit{Propicto-Orfeo} como base del corpus, por estar diseñado específicamente para la traducción a pictogramas y contar con 528 mil registros. Para que el modelo funcione en varios idiomas, se definió un procedimiento de traducción con NLLB-200 respaldado por evidencia: los resultados publicados en FLORES-200 permitieron preseleccionar ocho idiomas, y la prueba piloto con CometKiwi midió la calidad de la traducción directamente sobre oraciones del dominio. Las medianas de calidad estimada se ubicaron entre 0.79 y 0.85, y el español, el inglés, el alemán, el ruso y el turco mostraron una calidad equivalente, por lo que se eligieron como los cinco idiomas del corpus. Con el procesamiento bidireccional, el corpus final contará con 1,056,000 registros distribuidos de forma equilibrada entre los cinco idiomas.
+
+\subsection{Diseño del modelo de traducción}
+
+El modelo propuesto ajusta Qwen3-4B con LoRA para que genere directamente los identificadores de ARASAAC, tratados como un idioma nuevo. Este diseño tiene dos ventajas frente a los sistemas de referencia. Primero, al generar identificadores, la salida corresponde de forma inequívoca a pictogramas del catálogo y puede validarse automáticamente con la API de ARASAAC. Segundo, la comparación entre las configuraciones de vocabulario A y B permitirá medir de forma controlada si representar cada identificador como un token completo mejora la traducción, una pregunta que los resultados de ImageCLEFtoPicto 2026 dejan abierta.
+
+\subsection{Trabajo siguiente}
+
+La siguiente etapa del proyecto se centrará en construir el corpus completo en los cinco idiomas, entrenar el modelo en sus dos configuraciones de vocabulario y evaluarlo con sacreBLEU, METEOR y PictoER frente a la línea base basada en reglas y a los sistemas de ImageCLEFtoPicto 2026. Para que esta última comparación sea válida, se definirá la regla de conversión de identificadores a términos y se reportará por separado qué resultados se calcularon sobre identificadores y cuáles sobre términos. Finalmente, el modelo con mejor desempeño se integrará en la API y en la interfaz web descritas en el capítulo~\ref{sec:despliegue}, de modo que las personas usuarias puedan escribir un texto y obtener de inmediato su secuencia de pictogramas.

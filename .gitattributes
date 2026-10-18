@@ -1,0 +1,16 @@
+# Normaliza los saltos de línea: LF dentro del repositorio y CRLF en Windows.
+# Evita que git marque como modificados archivos que solo cambiaron de salto de línea.
+* text=auto eol=crlf
+
+*.tex text diff=tex
+*.bib text
+*.sty text
+*.cls text
+*.bst text
+
+# Binarios: nunca se convierten ni se comparan como texto
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.pdf binary
+*.gz binary

@@ -2,14 +2,17 @@
 \setcounter{page}{1} 
 
 \section{Introducción}
+
+En este capítulo se presenta el contexto del trabajo terminal. Primero se describe la problemática que enfrentan las personas con discapacidades del lenguaje y el reto técnico de traducir texto a pictogramas. Después se expone la justificación del proyecto y la solución propuesta: un modelo de traducción automática basado en aprendizaje profundo. Enseguida se plantean el objetivo general y los objetivos particulares, se describe la metodología que guía el desarrollo y, por último, se presenta la estructura del documento.
+
 \subsection{Problemática}
 La comunicación es un derecho humano fundamental. Sin embargo, personas con discapacidades del lenguaje enfrentan barreras significativas para expresarse. La Comunicación Aumentativa y Alternativa (CAA) ofrece una solución mediante el uso de pictogramas, los cuales son representaciones visuales de conceptos que permiten transmitir mensajes sin depender del lenguaje verbal convencional \cite{beukelman2013}.
 
-El Portal Aragonés de Comunicación Aumentativa y Alternativa (ARASAAC) es uno de los sistemas pictográficos más utilizados a nivel mundial, con más de 12,000 pictogramas de uso libre \cite{arasaac2007}. A pesar de la disponibilidad de estos recursos, la traducción automática de lenguaje natural a secuencias de pictogramas sigue siendo un reto.
+El Portal Aragonés de Comunicación Aumentativa y Alternativa (ARASAAC)\footnote{Las siglas ARASAAC no corresponden letra por letra al nombre del portal. El nombre combina «ARA», de Aragón, con «SAAC», siglas de \textit{Sistemas Aumentativos y Alternativos de Comunicación}, término con el que se conoce en español a las herramientas de CAA \cite{arasaac}.} es uno de los sistemas pictográficos más utilizados a nivel mundial, con más de 12,000 pictogramas de uso libre \cite{arasaac2007}. A pesar de la disponibilidad de estos recursos, la traducción automática de lenguaje natural a secuencias de pictogramas sigue siendo un reto.
 
-Para ilustrar la complejidad del problema, considérese una oración con ambigüedad léxica como: \textit{"El niño se sienta en el banco"}. Un sistema básico de mapeo podría mostrar un pictograma referente a una "institución financiera" en lugar del objeto para sentarse. El objetivo de este trabajo es lograr una traducción que comprenda el contexto global a través del desarrollo de un modelo de aprendizaje profundo unificado. Por ejemplo, ante la entrada: 
+Para ilustrar la complejidad del problema, considérese una oración con ambigüedad léxica como: \textit{«El niño se sienta en el banco»}. Un sistema básico de mapeo podría mostrar un pictograma referente a una «institución financiera» en lugar del objeto para sentarse. El objetivo de este trabajo es lograr una traducción que comprenda el contexto global a través del desarrollo de un modelo de aprendizaje profundo unificado. Por ejemplo, ante la entrada: 
 \begin{center}
-    \textit{"Mañana quiero ir al parque a jugar con mi perro."}
+    \textit{«Mañana quiero ir al parque a jugar con mi perro.»}
 \end{center}
 \begin{figure}[htbp]
     \centering
@@ -17,22 +20,26 @@ Para ilustrar la complejidad del problema, considérese una oración con ambigü
     \caption{Ejemplo de secuencia de pictogramas}
     \label{fig:ejemplo de salida}
 \end{figure}
-El sistema no solo debe buscar las imágenes individuales que corresponden a cada palabra, sino sintetizar de forma óptima la estructura gramatical para presentar una secuencia coherente de pictogramas (véase la Figura~\ref{fig:ejemplo de salida}) que mantenga la intención semántica original del usuario.
+El modelo no solo debe buscar las imágenes individuales que corresponden a cada palabra, sino sintetizar de forma óptima la estructura gramatical para presentar una secuencia coherente de pictogramas (véase la Figura~\ref{fig:ejemplo de salida}) que mantenga la intención semántica original del usuario.
 \subsection{Justificación}
 La comunicación constituye un derecho humano fundamental, sin embargo, su ejercicio pleno permanece inaccesible para las  personas que presentan discapacidades del lenguaje derivadas de condiciones como el autismo, la afasia, el síndrome de Rett o la parálisis cerebral. En México, el Instituto Nacional de Estadística y Geografía estima que más de más de 900 mil personas tienen una discapacidad para hablar o comunicarse \cite{inegi2020cpv}, por tal motivo es relevante desarrollar herramientas tecnológicas de apoyo accesibles y eficaces. La Comunicación Aumentativa y Alternativa (CAA), particularmente mediante el uso de pictogramas, representa una de las vías más consolidadas para atender esta necesidad \cite{beukelman2013}.
+
+El valor de los pictogramas va más allá de un solo idioma. Un pictograma representa un concepto mediante una imagen, por lo que su significado no depende de la lengua de quien lo lee; en este sentido, las secuencias de pictogramas pueden funcionar como un idioma común entre personas que no comparten una misma lengua. El trabajo de Mutal et al., \textit{A Neural Machine Translation Approach to Translate Text to Pictographs in a Medical Speech Translation System -- The BabelDr Use Case} \cite{mutal2022}, muestra este uso. BabelDr es una herramienta que ayuda a médicos que hablan francés a hacer preguntas a pacientes que hablan otro idioma cuando no hay un intérprete en el servicio de urgencias. Desde 2018 se usa en los Hospitales Universitarios de Ginebra, en Suiza, para atender a personas migrantes. Los autores proponen mostrar las preguntas del médico también como pictogramas, para que el paciente las entienda mejor. Se apoyan en estudios que indican que las imágenes ayudan a los pacientes a entender y recordar las indicaciones médicas y a seguirlas, en especial a quienes tienen dificultades para leer. Además, su sistema primero convierte cada pregunta en una descripción de su significado que no está escrita en ningún idioma en particular, y a partir de ella elige los pictogramas que se muestran al paciente. Este planteamiento muestra que una misma secuencia de pictogramas puede servir de puente entre idiomas, y amplía el alcance de la traducción a pictogramas: además de las personas usuarias de CAA, se benefician hablantes de otras lenguas, personas con baja alfabetización y personas que aprenden un segundo idioma.
 
 No obstante, los sistemas actuales de traducción automática de texto a pictogramas presentan limitaciones estructurales que restringen considerablemente su utilidad práctica. Herramientas como AraWord operan mediante mapeo léxico directo, ignorando el contexto de la oración \cite{araword2020}. Por su parte,  Text-to-Pictogram incorpora redes léxicas y técnicas de desambiguación de sentidos, pero pierde la coherencia global al procesar el texto de forma lineal y modular \cite{sevens2015}. Otra herramienta para este propósito, Aratraductor, si bien dio un paso importante al usar análisis sintáctico  para identificar lemas y  usar una técnica de N-grams para detectar frases hechas; este enfoque depende demasiado de reglas gramaticales fijas, lo cual impide su generalización y escalabilidad. Ninguno de estos enfoques es capaz de modelar de forma integral las dependencias semánticas de una oración, tampoco de manejar adecuadamente fenómenos como la polisemia, la negación o las expresiones idiomáticas. La raíz de estas deficiencias reside en su arquitectura: al ser sistemas modulares basados en reglas o recursos lingüísticos explícitos, carecen de la capacidad de aprender representaciones contextuales a partir de datos.
 
 \subsection{Solución propuesta}
-Frente a este panorama, el presente trabajo propone una arquitectura de aprendizaje profundo unificada, fundamentado en la arquitectura Transformer \cite{vaswani2017attention}. A diferencia de los modelos precedentes, esta aproximación aprovecha el mecanismo de \textit{self-attention} para modelar dependencias globales en la oración, permitiendo que la generación de cada pictograma considere el contexto semántico completo y no solo la unidad léxica inmediata. La adopción de modelos pre-entrenados como T5 o mT5 \cite{raffel2020}  permite transferir conocimiento lingüístico profundo hacia la tarea específica de traducción a pictogramas. La originalidad de la propuesta reside en dos ejes: la aplicación de arquitecturas Transformer para el modelado integral del contexto, y la validación mediante un diseño experimental que emplea métricas estandarizadas de traducción automática. Esto permitirá realizar una comparativa objetiva entre el enfoque propuesto y los sistemas tradicionales basados en reglas.
+Frente a este panorama, el presente trabajo propone un modelo de traducción automática basado en aprendizaje profundo, fundamentado en la arquitectura Transformer \cite{vaswani2017attention}. A diferencia de los modelos precedentes, esta aproximación aprovecha el mecanismo de \textit{self-attention} para modelar dependencias globales en la oración, permitiendo que la generación de cada pictograma considere el contexto semántico completo y no solo la unidad léxica inmediata. La adopción de modelos pre-entrenados como T5 o mT5 \cite{raffel2020}  permite transferir conocimiento lingüístico profundo hacia la tarea específica de traducción a pictogramas. La originalidad de la propuesta reside en dos ejes: la aplicación de arquitecturas Transformer para el modelado integral del contexto, y la validación mediante un diseño experimental que emplea métricas estandarizadas de traducción automática. Esto permitirá realizar una comparativa objetiva entre el enfoque propuesto y los sistemas tradicionales basados en reglas.
 
-El sistema beneficiaría directamente a personas usuarias de CAA y a sus familias, cuidadores y terapeutas del lenguaje, así como a desarrolladores de aplicaciones de accesibilidad, e incluso a personas aprendiendo un segundo idioma. Su viabilidad es alta,  por la disponibilidad abierta de los pictogramas ARASAAC, así como también por el aporte del corpus en inglés de la tarea \textit{Text-to-Picto} de ImageCLEF 2026. ImageCLEF es un laboratorio de evaluación internacional que forma parte de la CLEF (Conference and Labs of the Evaluation Forum), una iniciativa europea centrada en la evaluación de sistemas de información, se lleva a cabo cada año desde 2003 \cite{unknown-author-no-date2}.
+El modelo de traducción resultante beneficiará directamente a personas usuarias de CAA y a sus familias, cuidadores y terapeutas del lenguaje, así como a desarrolladores de aplicaciones de accesibilidad, e incluso a personas aprendiendo un segundo idioma. Su viabilidad es alta,  por la disponibilidad abierta de los pictogramas ARASAAC, así como también por el aporte del corpus en inglés de la tarea \textit{Text-to-Picto} de ImageCLEF 2026. ImageCLEF es un laboratorio de evaluación internacional que forma parte de la CLEF (Conference and Labs of the Evaluation Forum), una iniciativa europea centrada en la evaluación de sistemas de información, se lleva a cabo cada año desde 2003 \cite{unknown-author-no-date2}.
 
 Desde una perspectiva académica, el proyecto abarca distintas áreas relevantes de la Ingeniería en Inteligencia Artificial. Lo anterior se logra al establecer un flujo de trabajo estructurado donde el procesamiento de lenguaje natural se usa para preparar los datos; luego apoyándose en el aprendizaje profundo, se entrena a un modelo Transformer, y finalmente las métricas de evaluación validan el éxito de los resultados. Al trabajar estas áreas como un conjunto unificado, el proyecto busca resultados técnicos confiables y un beneficio social real.
 
 \subsection{Objetivo general}
 
-Desarrollar un sistema de traducción automática de texto en lenguaje natural a secuencias de pictogramas ARASAAC, basado en arquitecturas de aprendizaje profundo (Transformers).
+Desarrollar y entrenar un modelo de traducción automática, basado en aprendizaje profundo (arquitecturas Transformer), que convierta texto en lenguaje natural en secuencias de pictogramas ARASAAC que conserven el significado del mensaje original.
+
+El producto central de este trabajo es el modelo de traducción: el componente que, a partir de ejemplos de oraciones y sus secuencias de pictogramas, aprende a realizar la traducción por sí mismo, sin reglas escritas a mano. A diferencia de un sistema de software tradicional, cuyo comportamiento se programa instrucción por instrucción, el modelo adquiere su capacidad de traducir durante un proceso de entrenamiento con datos. Para demostrar su funcionamiento, el modelo se pondrá a disposición mediante una interfaz web que permite escribir un texto y visualizar los pictogramas generados.
 
 
 
@@ -42,20 +49,20 @@ Desarrollar un sistema de traducción automática de texto en lenguaje natural a
 \begin{enumerate}
     \item Construir un corpus  Español-Pictogramas a partir de los datos de la tarea \textit{Text-to-Picto} de ImageCLEF 2026, realizando la traducción  y la validación de la alineación semántica para el idioma español.
     \item Implementar un modelo \textit{encoder-decoder} basado en Transformers para la tarea de traducción texto a pictogramas.
-    \item Evaluar el sistema propuesto utilizando métricas estándar de traducción automática.
+    \item Evaluar el modelo propuesto utilizando métricas estándar de traducción automática.
     \item Desarrollar una interfaz de usuario web que consuma el modelo entrenado mediante una API, permitiendo la interacción en tiempo real y la visualización de las secuencias generadas.
 \end{enumerate}
 
 
 \subsection{Metodología}
 
-La metodología del proyecto seguirá de manera adaptada y práctica las fases del modelo \textit{CRISP-ML}, orientadas a garantizar calidad, trazabilidad y reproducibilidad en el desarrollo de un sistema de traducción automática de texto a pictogramas. Cada fase indica las actividades, entregables y controles de calidad asociados.
+La metodología del proyecto seguirá de manera adaptada y práctica las fases del modelo \textit{CRISP-ML}, orientadas a garantizar calidad, trazabilidad y reproducibilidad en el desarrollo de un modelo de traducción automática de texto a pictogramas. Cada fase indica las actividades, entregables y controles de calidad asociados.
 
 \begin{enumerate}
 
     \item \textbf{Comprensión del problema y de los datos (\textit{Business \& Data Understanding})}
 
-    En una primera etapa, se definirá con claridad el problema desde una perspectiva técnica y social. Se establecerán los objetivos funcionales del sistema, determinando que el modelo deberá traducir texto en español, y en otros cuatro idiomas (inglés, alemán, ruso y turco), a secuencias coherentes de identificadores de pictogramas de ARASAAC, preservando el significado semántico global del mensaje. En esta fase se evaluarán también los conjuntos de datos disponibles para la tarea y se seleccionará el que se ajuste al alcance del proyecto.
+    En una primera etapa, se definirá con claridad el problema desde una perspectiva técnica y social. Se establecerán los objetivos funcionales del modelo, determinando que el modelo deberá traducir texto en español, y en otros cuatro idiomas (inglés, alemán, ruso y turco), a secuencias coherentes de identificadores de pictogramas de ARASAAC, preservando el significado semántico global del mensaje. En esta fase se evaluarán también los conjuntos de datos disponibles para la tarea y se seleccionará el que se ajuste al alcance del proyecto.
 
     Asimismo, se especificarán criterios de éxito medibles, tales como desempeño en métricas automáticas (\textit{SacreBLEU}, \textit{METEOR}, \textit{PictoER}), reducción de ambigüedades léxicas y tiempos de respuesta aceptables en la \textit{API} de inferencia. También se establecerán requisitos no funcionales relacionados con accesibilidad y reproducibilidad.
 
@@ -75,9 +82,9 @@ La metodología del proyecto seguirá de manera adaptada y práctica las fases d
 
     \item \textbf{Evaluación de los modelos (\textit{Evaluating Machine Learning Models})}
 
-    El sistema entrenado será evaluado utilizando métricas estándar de traducción automática como \textit{SacreBLEU}, \textit{METEOR} y \textit{PictoER}. Las métricas se calcularán sobre las secuencias de identificadores de pictograma y, para comparar con los sistemas de ToPicto 2026, también sobre los términos obtenidos al convertir los identificadores mediante el léxico de ARASAAC.
+    El modelo entrenado será evaluado utilizando métricas estándar de traducción automática como \textit{SacreBLEU}, \textit{METEOR} y \textit{PictoER}. Las métricas se calcularán sobre las secuencias de identificadores de pictograma y, para comparar con los sistemas de ToPicto 2026, también sobre los términos obtenidos al convertir los identificadores mediante el léxico de ARASAAC.
 
-    Los resultados se compararán con la línea base de reglas y con los sistemas reportados en ToPicto 2026, considerando que el modelo propuesto es de mayor tamaño, lo que limita la atribución de las mejoras únicamente al enfoque. A partir de esta comparación se establecerá una discusión crítica sobre ventajas y limitaciones del enfoque propuesto.
+    Los resultados se compararán con la línea base de reglas y con los sistemas reportados en ToPicto 2026, considerando en el análisis la diferencia de tamaño entre el modelo propuesto y dichos sistemas. A partir de esta comparación se establecerá una discusión crítica sobre las fortalezas del enfoque propuesto y sus oportunidades de mejora.
 
     \item \textbf{Despliegue (\textit{Deployment})}
 
@@ -94,3 +101,5 @@ La metodología del proyecto seguirá de manera adaptada y práctica las fases d
 \end{enumerate}
 
 \subsection{Estructura del trabajo}
+
+El documento se organiza en los siguientes capítulos. El capítulo \ref{sec:marco-teorico} presenta el marco teórico conceptual: el procesamiento de lenguaje natural, la Comunicación Aumentativa y Alternativa, las redes neuronales y la arquitectura Transformer, los modelos preentrenados, la traducción automática y las métricas con las que se evalúa. El capítulo \ref{sec:estado-arte} revisa el estado del arte de la traducción de texto a pictogramas, desde los primeros sistemas basados en reglas hasta los modelos neuronales de la tarea ImageCLEFtoPicto. Los capítulos \ref{sec:comprension} a \ref{sec:monitoreo} describen el desarrollo del proyecto siguiendo las fases de CRISP-ML: comprensión del problema y de los datos, ingeniería de datos, ingeniería del modelo, evaluación, despliegue y monitoreo. Por último, el capítulo \ref{sec:discusion} presenta una discusión preliminar de los avances obtenidos y de los pasos siguientes.

@@ -40,6 +40,7 @@
 \usepackage{amsmath}
 \numberwithin{table}{section}
 \numberwithin{figure}{section}
+\numberwithin{equation}{section} % ecuaciones: (capítulo.número)
 \usepackage{amssymb}
 \usepackage{textcomp}
 \usepackage{siunitx}
@@ -63,12 +64,15 @@
 \usepackage{lscape}
 \usepackage{pdflscape}
 \usepackage{subcaption}
+% Separador entre el número y el texto del caption: "Tabla 2.3. Descripción"
+\captionsetup{labelsep=period}
 
 % ---------------------------------------------------------------------
 %  Diagramas con TikZ
 % ---------------------------------------------------------------------
 \usepackage{tikz}
 \usetikzlibrary{shapes.geometric, arrows.meta, positioning, fit, backgrounds, calc, shadows}
+\usetikzlibrary{babel} % evita conflictos de TikZ con los caracteres activos de babel en español
 
 % ---------------------------------------------------------------------
 %  Bibliografía (formato IEEE: citas numéricas entre corchetes)

@@ -1,16 +1,12 @@
-\section{Avances}
-
-Esta sección describe el trabajo realizado hasta ahora. Se organiza según las fases de la metodología CRISP-ML: comprensión del problema y de los datos, ingeniería de datos, ingeniería del modelo, evaluación, despliegue y monitoreo.
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Comprensión del problema y de los datos}
+\section{Comprensión del problema y de los datos}
+\label{sec:comprension}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsubsection{Objetivo de la fase}
-En esta fase se revisaron los conjuntos de datos disponibles para la tarea de texto a pictogramas y la fuente del vocabulario de pictogramas (ARASAAC). El objetivo fue decidir con qué datos se entrenará el modelo y conocer sus limitaciones antes de procesarlos.
+Este capítulo y los siguientes describen el desarrollo del proyecto de acuerdo con las fases de la metodología CRISP-ML. En este primer capítulo se aborda la comprensión de los datos: se revisan los conjuntos de datos disponibles para la tarea de texto a pictogramas, se explica la elección del corpus con el que se entrenará el modelo y se describe la fuente del vocabulario de pictogramas, el catálogo de ARASAAC, junto con la forma en que se consulta a través de su API (\textit{Application Programming Interface}, interfaz de programación de aplicaciones).
 
-\subsubsection{Conjunto de datos de ToPicto}
-El conjunto de datos que se planeaba usar en un principio es el que proporciona CLEF (\textit{Conference and Labs of the Evaluation Forum}) para la tarea de traducción a pictogramas. Este conjunto presentó problemas desde el inicio. Se construyó con traducción automática y un conjunto de reglas, y solo una fracción muy pequeña fue anotada por humanos: 1,200 de más de 300 mil registros. % VERIFICAR: esta cifra no coincide con los 528K de Propicto-Orfeo mencionados más abajo; aclarar a qué subconjunto se refiere.
+\subsection{Conjunto de datos de ToPicto}
+El primer conjunto de datos que se analizó es el que proporciona CLEF (\textit{Conference and Labs of the Evaluation Forum}) para la tarea de traducción a pictogramas. Su análisis permitió identificar una característica importante. Se construyó con traducción automática y un conjunto de reglas, y solo una fracción muy pequeña fue anotada por humanos: 1,200 de más de 300 mil registros. % VERIFICAR: esta cifra no coincide con los 528K de Propicto-Orfeo mencionados más abajo; aclarar a qué subconjunto se refiere.
 Al final del proceso, los lemas se asocian con los identificadores de los pictogramas. El flujo completo se muestra en la Figura~\ref{fig:propicto_pipeline}.
 
 \begin{figure}[H]
@@ -21,16 +17,16 @@ Al final del proceso, los lemas se asocian con los identificadores de los pictog
 \end{figure}
 % VERIFICAR: en el documento se usan dos keys distintas, macaire2024 y macaire2024propicto. Unificar.
 
-El problema principal es el siguiente. Si un modelo solo aprende la relación entre un texto y su secuencia de pictogramas, y esa secuencia se obtuvo con reglas fijas, su desempeño queda limitado por esas mismas reglas. Lo ideal sería que el modelo aprendiera un idioma nuevo: el de los pictogramas o, en su defecto, el de sus identificadores.
+Esta característica tiene una consecuencia directa: si un modelo solo aprende la relación entre un texto y su secuencia de pictogramas, y esa secuencia se obtuvo con reglas fijas, su desempeño queda limitado por esas mismas reglas. Lo ideal sería que el modelo aprendiera un idioma nuevo: el de los pictogramas o, en su defecto, el de sus identificadores.
 
-\subsubsection{Alternativa explorada: xP3mt}
+\subsection{Alternativa explorada: xP3mt}
 Para enseñar un idioma nuevo a un modelo de lenguaje se revisó el trabajo ConlangBench \citep{jeong_conlangbench_2026}, en el que se enseñó a un modelo a usar lenguas ficticias como el élfico. De este trabajo se concluye que no conviene limitarse a la tarea de traducción. Es mejor usar instrucciones variadas: resumir, ampliar textos, responder preguntas, clasificar o predecir. Así el modelo usa el nuevo lenguaje desde distintos enfoques en lugar de memorizar una correspondencia.
 
 Con esta idea se consideró el conjunto de datos xP3mt \cite{muennighoff_crosslingual_2023}, creado por BigScience. Es una variante de xP3 (\textit{Crosslingual Public Pool of Prompts}), una colección de tareas de PLN (preguntas y respuestas, resumen, inferencia, paráfrasis, traducción, entre otras) en formato instrucción--respuesta, en 46 idiomas. En xP3mt las instrucciones se tradujeron automáticamente al idioma de cada ejemplo. El conjunto está disponible en Hugging Face (\texttt{bigscience/xP3mt}); la configuración en español tiene alrededor de 3.37 millones de registros con dos campos: \texttt{inputs} y \texttt{targets}.
 
 La propuesta era aplicar las reglas de \textit{Propicto} solo a la columna \texttt{targets}. Así el modelo aprendería a responder instrucciones con secuencias de pictogramas.
 
-Este enfoque se descartó. Las salidas de xP3mt son largas y complejas, como muestra la Tabla~\ref{tab:ejemplos_xp3mt}. En las pruebas, muchas palabras de las salidas no tenían un pictograma equivalente en ARASAAC, por lo que la traducción a pictogramas no era confiable. Para usar este conjunto habría que validar a mano las traducciones, y eso queda fuera del alcance de este trabajo.
+Las pruebas con xP3mt orientaron la elección hacia un corpus diseñado específicamente para pictogramas. Las salidas de xP3mt son largas y complejas, como muestra la Tabla~\ref{tab:ejemplos_xp3mt}, y muchas de sus palabras no tienen un pictograma equivalente en ARASAAC, por lo que aprovecharlo requeriría validar manualmente cada traducción. Por ello se optó por un corpus cuyas secuencias ya están asociadas a pictogramas, como se describe a continuación.
 
 \begin{table}[H]
     \centering
@@ -53,12 +49,12 @@ Este enfoque se descartó. Las salidas de xP3mt son largas y complejas, como mue
     \end{tabularx}
 \end{table}
 
-\subsubsection{Conjunto de datos elegido: Propicto-Orfeo}
+\subsection{Conjunto de datos elegido: Propicto-Orfeo}
 Se decidió usar \textit{Propicto-Orfeo} \citep{macaire2024propicto}, que está hecho específicamente para la traducción a pictogramas y tiene 528K registros en francés. Cada registro tiene tres campos: el texto fuente (\texttt{src}), la secuencia de términos lematizados (\texttt{tgt}) y la lista de identificadores de pictograma (\texttt{pictos}).
 
-Su principal limitación es que solo está en francés. Para que el modelo no dependa de un solo idioma, el texto fuente se traducirá a otros idiomas. Este proceso se describe en la fase de ingeniería de datos (Sección~\ref{sec:seleccion_idiomas}).
+El corpus está en francés; para que el modelo funcione en varios idiomas, el texto fuente se traducirá a otros cinco. Este proceso se describe en la fase de ingeniería de datos (Sección~\ref{sec:seleccion_idiomas}).
 
-\subsubsection{Vocabulario de pictogramas: API de ARASAAC}
+\subsection{Vocabulario de pictogramas: API de ARASAAC}
 \label{sec:api_arasaac}
 
 El sistema necesita consultar el catálogo de ARASAAC en tres momentos: (i)~al construir el conjunto de datos, para asociar términos con pictogramas; (ii)~después de la inferencia, para convertir los términos generados por el modelo en identificadores; y (iii)~en la interfaz web, para mostrar las imágenes. Para esto se usa directamente la API REST pública de ARASAAC (\url{https://api.arasaac.org/v1}), sin construir una copia local del catálogo. La Tabla~\ref{tab:api_arasaac} resume los puntos de acceso que se usan.
@@ -99,9 +95,9 @@ Visualización en la interfaz web \\
 \end{tabularx}
 \end{table}
 
-\paragraph{Estructura de la respuesta.}
+\subsubsection{Estructura de la respuesta}
 Cada pictograma se devuelve como un objeto JSON. Los campos útiles para este trabajo son: \texttt{\_id} (el identificador numérico, el mismo de la columna \texttt{pictos}), \texttt{keywords} (lista de objetos con \texttt{keyword}, \texttt{type}, \texttt{meaning} y \texttt{plural}), \texttt{categories}, \texttt{tags} y \texttt{synsets} (enlaces a WordNet). Los campos \texttt{schematic}, \texttt{violence} y \texttt{sex} permiten filtrar pictogramas inadecuados o no esquemáticos.
-\paragraph{Ejemplo de consulta.}
+\subsubsection{Ejemplo de consulta}
 El Código~\ref{lst:api_arasaac} muestra cómo se comprueba que un identificador existe, se lee su palabra clave y se obtiene la URL de su imagen.
 
 \begin{lstlisting}[
@@ -128,21 +124,25 @@ if existe:
 # URL de la imagen
 url = f"{STATIC}/{id_picto}/{id_picto}_500.png"
 \end{lstlisting}
-\paragraph{Licencia.}
+\subsubsection{Licencia}
 Los pictogramas son propiedad del Gobierno de Aragón, su autor es Sergio Palao y se distribuyen bajo licencia CC BY-NC-SA~\cite{arasaac}. Por ello, el uso en este trabajo es no comercial y las imágenes de la interfaz deben conservar la atribución.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Ingeniería de datos}
+\clearpage
+\section{Ingeniería de datos}
+\label{sec:ingenieria-datos}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+En este capítulo se describe cómo se construye el corpus con el que se entrenará el modelo a partir de \textit{Propicto-Orfeo}. Primero se explica la selección de los idiomas a los que se traduce el corpus, que combina resultados publicados con una prueba piloto propia. Después se presenta el procesamiento bidireccional de cada ejemplo y, por último, el formato final de los datos.
  
-\subsubsection{Selección de idiomas para la traducción del corpus}
+\subsection{Selección de idiomas para la traducción del corpus}
 \label{sec:seleccion_idiomas}
  
 El texto fuente de \textit{Propicto-Orfeo} se traducirá a otros idiomas con NLLB-200 en su versión de 3.3B parámetros \cite{nllbteamNoLanguageLeft2022}. Los identificadores de pictograma (\texttt{pictos}) se conservan, porque no dependen del idioma. La columna \texttt{tgt} original no se usa, porque sus términos están en francés.
  
 Traducir el corpus a muchos idiomas es costoso, y cada traducción automática introduce errores que no se pueden revisar a mano. Por eso se eligió un grupo reducido de idiomas con criterios claros y se midió la calidad de la traducción antes de aplicarla a todo el corpus.
  
-\paragraph{Criterios de preselección.}
+\subsubsection{Criterios de preselección}
 Se usaron tres criterios:
 \begin{enumerate}
     \item \textbf{Calidad de la traducción de NLLB-200 desde el francés.} No tiene sentido traducir el corpus a un idioma que NLLB-200 traduce mal, porque los errores pasarían directo a los datos de entrenamiento. Para saber qué tan bien traduce NLLB-200 del francés a cada idioma se usaron resultados ya publicados, en lugar de evaluar cada idioma desde cero.
@@ -160,7 +160,7 @@ Se usaron tres criterios:
  
 Con estos criterios se preseleccionaron ocho idiomas: español (chrF++ de 50.2), inglés (67.3), alemán (53.2), ruso (48.2), turco (46.5), vietnamita (51.2), hindi (46.4) y árabe (44.3). Se descartaron el japonés y el chino. Qwen3 los maneja bien, pero sus valores de chrF++ (19.9 y 16.7) no sirven para juzgar la traducción: la métrica penaliza las escrituras sin espacios entre palabras. Por la misma razón, chrF++ no sirve para comparar idiomas con escrituras distintas, y fue necesaria una prueba adicional.
  
-\paragraph{Prueba piloto.}
+\subsubsection{Prueba piloto}
 FLORES-200 se compone de oraciones de Wikipedia, mientras que \textit{Propicto} contiene habla transcrita. Por eso los valores de chrF++ no garantizan la calidad en nuestro dominio. Para medirla directamente se tomó una muestra aleatoria de 200 oraciones de \textit{Propicto-CommonVoice}, con semilla fija, sin duplicados ni oraciones de menos de tres palabras. % VERIFICAR: la muestra es de Propicto-CommonVoice y el corpus final es Propicto-Orfeo; conviene explicar por qué se usó este subconjunto.
 Cada oración se tradujo a los ocho idiomas con NLLB-200 3.3B (búsqueda por haz de tamaño 4, precisión de 16 bits).
  
@@ -187,13 +187,13 @@ Las 1,600 traducciones se evaluaron con CometKiwi (\texttt{wmt22-cometkiwi-da}) 
     \end{tabular}
 \end{table}
 
-\paragraph{Interpretación.}
+\subsubsection{Interpretación}
 La traducción típica es buena en todos los idiomas, con medianas entre 0.79 y 0.85. El inglés es el mejor: solo el 6\% de sus traducciones queda por debajo de 0.70. Español, alemán, turco, hindi y ruso tienen medias entre 0.776 y 0.785, y sus intervalos de confianza se traslapan casi por completo. Con esta muestra no hay evidencia de que alguno se traduzca mejor que otro. El vietnamita queda un poco por debajo. El árabe es el peor: su intervalo no se traslapa con el del inglés, el 30\% de sus traducciones está por debajo de 0.70 y sus traducciones miden en mediana el 72\% de la oración original (en los demás idiomas, cerca del 90\% o más). Esto sugiere que se omite contenido.
 
-\paragraph{Decisión.}
+\subsubsection{Decisión}
 Se traducirá el corpus a cinco idiomas: español, inglés, alemán, ruso y turco, cuya calidad de traducción resultó equivalente. Los 528K registros de \textit{Propicto-Orfeo} se reparten en partes iguales entre los cinco idiomas: \textbf{105,600 registros por idioma}. Así se evita el sesgo hacia una sola lengua y el corpus mantiene un tamaño manejable.
 
-\subsubsection{Procesamiento bidireccional}
+\subsection{Procesamiento bidireccional}
 Siguiendo la recomendación de ConlangBench \citep{jeong_conlangbench_2026} de no limitarse a una sola tarea, cada muestra se usa en dos direcciones:
 \begin{itemize}
     \item \textbf{Directa (texto $\rightarrow$ identificadores):} la tarea principal del sistema. 105,600 ejemplos por idioma.
@@ -201,7 +201,7 @@ Siguiendo la recomendación de ConlangBench \citep{jeong_conlangbench_2026} de n
 \end{itemize}
 Cada idioma aporta 211,200 ejemplos ($105{,}600 \times 2$), y el corpus final tiene \textbf{1,056,000 registros}.
 
-\subsubsection{Formato final}
+\subsection{Formato final}
 Cada ejemplo del corpus tiene dos campos: el texto traducido en \texttt{src} y la lista de identificadores de pictograma en \texttt{pictos}. El modelo aprende a predecir directamente la secuencia de identificadores a partir del texto, sin generar términos intermedios. La columna \texttt{tgt} original de \textit{Propicto-Orfeo} no se usa, porque sus términos están en francés y no son parte de la salida del modelo.
 
 Por ejemplo, la oración «El niño come una manzana» corresponde a la secuencia \texttt{2345 6789 1234}, donde cada número es el identificador de ARASAAC del pictograma de «niño», «comer» y «manzana», respectivamente.
@@ -212,10 +212,14 @@ Los términos compuestos se escriben unidos por guion bajo, como \texttt{cepilla
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Ingeniería del modelo de aprendizaje automático}
+\clearpage
+\section{Ingeniería del modelo de aprendizaje automático}
+\label{sec:ingenieria-modelo}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsubsection{Modelo utilizado y justificación}
+En este capítulo se presenta el modelo de traducción propuesto. Se justifica la elección del modelo base, Qwen3-4B, y se describen las dos configuraciones de vocabulario que se compararán, el ajuste con LoRA (\textit{Low-Rank Adaptation}, adaptación de bajo rango), el procedimiento de entrenamiento e inferencia y la arquitectura completa del sistema. El capítulo cierra con el análisis de viabilidad de los recursos de cómputo necesarios para el entrenamiento.
+
+\subsection{Modelo utilizado y justificación}
 \label{sec:modelo}
 
 Se usa Qwen3-4B~\cite{yang2025qwen3}, un modelo de lenguaje denso y \textit{decoder-only}. La idea del trabajo es enseñar a un modelo que ya domina varios idiomas a escribir en el <<idioma>> de los identificadores de ARASAAC, como si se le enseñara un idioma nuevo. Chinese-LLaMA sigue un planteamiento parecido: amplía el vocabulario de LLaMA y lo adapta con LoRA~\cite{cui2023efficient}.
@@ -229,11 +233,11 @@ Las razones para elegir Qwen3-4B son:
     \item \textbf{Licencia.} Sus pesos se publican con licencia Apache~2.0~\cite{yang2025qwen3}.
 \end{itemize}
 
-Se descartó Qwen3.5, sucesor de esta familia, porque es multimodal y combina atención con capas Gated DeltaNet~\cite{qwen35card}. Esa complejidad no aporta a una tarea de solo texto con oraciones cortas, y haría más difícil atribuir las diferencias entre las configuraciones~A y~B al vocabulario y no a la arquitectura.
+Se prefirió Qwen3-4B sobre Qwen3.5, sucesor de esta familia, que es multimodal y combina atención con capas Gated DeltaNet~\cite{qwen35card}. Una arquitectura de solo texto se ajusta mejor a una tarea con oraciones cortas y permite atribuir con claridad las diferencias entre las configuraciones~A y~B al vocabulario.
 
-Los sistemas de ToPicto 2026 usan modelos codificador--decodificador pequeños con ajuste completo: T5-base, FLAN-T5-base y BART-base~\cite{Sudharshan2026,GuzmanColomina2026,Gokul2026}. Sus resultados sirven como referencia, pero el modelo propuesto es mucho más grande, así que una mejora en las métricas no podría atribuirse solo al enfoque.
+Los sistemas de ToPicto 2026 usan modelos codificador--decodificador pequeños con ajuste completo: T5-base, FLAN-T5-base y BART-base~\cite{Sudharshan2026,GuzmanColomina2026,Gokul2026}. Sus resultados sirven como referencia para el modelo propuesto, y al compararlos se tomará en cuenta que este es de mayor tamaño.
 
-\subsubsection{Vocabulario: configuraciones A y B}
+\subsection{Vocabulario: configuraciones A y B}
 Un identificador como \texttt{2345} no es una sola unidad para el tokenizador: lo divide en dígitos. Un identificador es entonces una secuencia de varios tokens, y el modelo debe aprender qué combinaciones de dígitos corresponden a cada pictograma. Los equipos de ToPicto 2026, que generan términos, resolvieron un problema parecido (términos compuestos que el tokenizador divide en varias piezas) de formas distintas:
 \begin{itemize}
     \item Los dos primeros lugares no cambiaron el vocabulario~\citep{Sudharshan2026,GuzmanColomina2026}.
@@ -246,7 +250,7 @@ Los tres primeros sistemas quedaron separados por menos de un punto de sacreBLEU
     \item \textbf{Configuración B:} cada identificador que aparece al menos cinco veces en los \texttt{pictos} de entrenamiento se añade como un token completo (por ejemplo, \texttt{\textless picto\_2345\textgreater}). Como un identificador no tiene piezas con significado que promediar, el embedding de cada token nuevo se inicia con el promedio de los embeddings de las piezas en que el tokenizador divide la palabra clave principal del pictograma, obtenida de la API de ARASAAC. Es una variante de la inicialización por promedio de Hewitt~\citep{hewitt2021initializing}. Así el token empieza cerca del significado del pictograma en el espacio del modelo.
 \end{itemize}
 
-\subsubsection{Ajuste con LoRA}
+\subsection{Ajuste con LoRA}
 LoRA~\citep{hu2021lora} congela los pesos originales $W_0 \in \mathbb{R}^{d \times k}$ y les suma una actualización de bajo rango $\Delta W = BA$, donde $A \in \mathbb{R}^{r \times k}$ se inicia con una distribución gaussiana, $B \in \mathbb{R}^{d \times r}$ se inicia en cero y $r \ll \min(d,k)$. La salida de la capa es:
 \begin{equation}
 h = W_0x + \frac{\alpha}{r}BAx
@@ -255,9 +259,10 @@ Como $B$ empieza en cero, al inicio $\Delta W = 0$ y el modelo conserva su compo
 
 LoRA se aplica en cada capa del Transformer, tanto a las proyecciones de atención como a las de la red \textit{feed-forward}. Se incluyen estas últimas porque LoRA aprende menos que el ajuste completo cuando debe adquirir conocimiento nuevo~\citep{biderman2024lora}, y Chinese-LLaMA también lo aplicó a atención y MLP~\citep{cui2023efficient}.
 
-\paragraph{Parámetros entrenables.} En ambas configuraciones se entrenan $A$ y $B$. En la configuración B también se entrenan las filas nuevas de la matriz de embeddings y de la capa de salida (una por cada identificador añadido), con el parámetro \texttt{trainable\_token\_indices} de PEFT~\citep{peft}.
+\subsubsection{Parámetros entrenables}
+En ambas configuraciones se entrenan $A$ y $B$. En la configuración B también se entrenan las filas nuevas de la matriz de embeddings y de la capa de salida (una por cada identificador añadido), con el parámetro \texttt{trainable\_token\_indices} de PEFT~\citep{peft}.
 
-\subsubsection{Entrenamiento e inferencia}
+\subsection{Entrenamiento e inferencia}
 Cada ejemplo se presenta como una instrucción seguida del texto y de la secuencia de identificadores. Por ejemplo: \texttt{Traduce a pictogramas: El niño come una manzana.} seguido de \texttt{2345 6789 1234}. Los equipos de ToPicto que probaron un prefijo de tarea lo conservaron~\citep{Sudharshan2026,GuzmanColomina2026}. En la dirección inversa se usa una instrucción equivalente que pide el texto a partir de los identificadores.
 % REEMPLAZAR los IDs de ejemplo por los reales.
 
@@ -265,14 +270,11 @@ La pérdida es la entropía cruzada y se calcula solo sobre la parte de la respu
 
 Al ser un modelo generativo, puede producir identificadores que no existen en ARASAAC. Cada identificador generado se comprueba con el punto de acceso \texttt{GET /pictograms/\{idioma\}/\{id\}} de la API (Sección~\ref{sec:api_arasaac}) y los inexistentes se descartan de la secuencia final.
 
-La pérdida es la entropía cruzada y se calcula solo sobre la parte de la respuesta. En inferencia se usa decodificación voraz o búsqueda por haz; el ancho del haz y la penalización de longitud se eligen con el conjunto de validación. Los tres primeros sistemas de ToPicto usaron decodificación voraz o haces de 12 y 16, según el equipo~\citep{Sudharshan2026,GuzmanColomina2026,Gokul2026}.
-
-Al ser un modelo generativo, puede producir términos que no existen en el catálogo. Estos términos se buscan con el punto de acceso \texttt{bestsearch} de la API de ARASAAC para asignarles el pictograma más cercano (Sección~\ref{sec:api_arasaac}).
-
 La Figura~\ref{fig:arquitectura_lora_arasaac} resume el sistema. Primero se construye el corpus: \textit{Propicto-Orfeo} se traduce a cinco idiomas y se procesa en dos direcciones. Después, Qwen3-4B se ajusta con LoRA en las dos configuraciones de vocabulario. Por último, en inferencia, el modelo genera directamente los identificadores de ARASAAC y se descartan los que no existen en el catálogo.
 
 \begin{figure}[htbp]
   \centering
+  \shorthandoff{<>}% evita conflictos de babel (español) con las flechas de TikZ
   \resizebox{\textwidth}{!}{%
   \begin{tikzpicture}[
     font=\sffamily,
@@ -364,7 +366,7 @@ La Figura~\ref{fig:arquitectura_lora_arasaac} resume el sistema. Primero se cons
   \label{fig:arquitectura_lora_arasaac}
 \end{figure}
 
-\subsubsection{Análisis de viabilidad}
+\subsection{Análisis de viabilidad}
 \label{sec:viabilidad}
 
 Para entrenar se necesita una GPU con memoria suficiente para Qwen3-4B en 16 bits (unos 8~GB de pesos) más las activaciones y los parámetros de LoRA. La Tabla~\ref{tab:cloud-services} compara los servicios de cómputo en la nube revisados.
@@ -392,6 +394,13 @@ Hugging Face Jobs      & No                        & Por trabajo & N/A (contened
 \end{table}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\clearpage
+\section{Evaluación de los modelos}
+\label{sec:evaluacion}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+En este capítulo se define cómo se medirá el desempeño del modelo de traducción: qué métricas se usarán, sobre qué tipo de secuencias se calcularán y qué comparaciones permitirán valorar los resultados.
+
 Se usarán las métricas oficiales de ToPicto: sacreBLEU, METEOR y la tasa de error de términos de pictograma (PictoER)~\citep{Hjuler2026}. Como el modelo predice identificadores, las métricas se calculan principalmente sobre las secuencias de identificadores (\texttt{pictos}), donde cada identificador cuenta como una unidad.
 
 Los sistemas de ToPicto producen términos y se evalúan sobre términos. Para compararse con ellos, los identificadores generados y los de referencia se convertirán a términos con las palabras clave de la API de ARASAAC, solo para el cálculo de la métrica. Se informará explícitamente qué resultados se calcularon sobre identificadores y cuáles sobre términos convertidos.
@@ -406,11 +415,16 @@ Se harán tres comparaciones, todas con las mismas métricas y el mismo conjunto
     \item Resultados frente a los sistemas de ToPicto 2026 (Tabla~\ref{tab:sota-text-to-picto}), tomando en cuenta la diferencia de tamaño entre modelos y la conversión de identificadores a términos.
 \end{itemize}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Despliegue}
+\clearpage
+\section{Despliegue}
+\label{sec:despliegue}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Esta fase aún no inicia. Se planea una interfaz web donde el usuario escriba un texto y reciba la secuencia de pictogramas. El modelo genera directamente los identificadores, se descartan los que no existen en ARASAAC y las imágenes se cargan desde su CDN (Tabla~\ref{tab:api_arasaac}), con la atribución que exige la licencia.
+En este capítulo se describe cómo el modelo entrenado se pondrá a disposición de las personas usuarias. El modelo se encapsulará en una API REST (\textit{Representational State Transfer}) que recibe texto en cualquiera de los cinco idiomas del corpus y devuelve la secuencia de identificadores de ARASAAC. Sobre esta API se construirá una interfaz web en la que el usuario escribe un texto y visualiza de inmediato la secuencia de pictogramas. El modelo genera directamente los identificadores, la API conserva solo los que existen en el catálogo de ARASAAC y las imágenes se cargan desde su CDN (\textit{Content Delivery Network}, red de distribución de contenidos; Tabla~\ref{tab:api_arasaac}), con la atribución que exige la licencia. El servicio se empaquetará en contenedores para que pueda desplegarse de forma reproducible en distintos entornos.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Monitoreo y mantenimiento}
+\clearpage
+\section{Monitoreo y mantenimiento}
+\label{sec:monitoreo}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Esta fase aún no inicia. Como el modelo aprende identificadores fijos del catálogo, un pictograma que ARASAAC elimine, reemplace o cambie de significado afectaría directamente las salidas. Se deberá vigilar la disponibilidad de la API, los cambios en el catálogo y el porcentaje de identificadores generados que ya no existen.
+
+En este capítulo se describen las acciones para asegurar que el modelo desplegado mantenga su calidad con el tiempo. Como el modelo aprende identificadores fijos del catálogo, cualquier pictograma que ARASAAC elimine, reemplace o cambie de significado se reflejaría directamente en las salidas. Por ello, el plan de monitoreo da seguimiento a tres indicadores: la disponibilidad de la API de ARASAAC, los cambios en el catálogo y el porcentaje de identificadores generados que no existen en él. Cuando alguno de estos indicadores muestre una degradación, se realizará el mantenimiento correspondiente, por ejemplo, actualizar la lista de identificadores válidos o reajustar el modelo con el catálogo vigente.

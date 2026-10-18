@@ -1,0 +1,89 @@
+# =====================================================================
+#  .gitignore para el proyecto LaTeX del TT (TT1 y protocolo)
+#  Se ignoran los archivos que LaTeX genera al compilar: se pueden
+#  volver a crear en cualquier momento y solo generan conflictos.
+# =====================================================================
+
+# --- Archivos auxiliares de compilación ---
+*.aux
+*.lof
+*.lot
+*.toc
+*.out
+*.log
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.synctex(busy)
+*.synctex
+*.xdv
+*.dvi
+*.ps
+
+# --- Bibliografía (BibTeX / Biber) ---
+*.bbl
+*.bcf
+*.blg
+*.run.xml
+*-blx.bib
+
+# --- Índices, glosarios y listas ---
+*.idx
+*.ilg
+*.ind
+*.glo
+*.gls
+*.glg
+*.ist
+*.acn
+*.acr
+*.alg
+*.lol
+*.nav
+*.snm
+*.vrb
+*.loa
+
+# --- Paquetes específicos ---
+*.listing
+_minted*/
+*.pyg
+*.auxlock
+*.figlist
+*.makefile
+*-figure*.md5
+*-figure*.dpth
+*.ptc
+*.maf
+*.mtc
+*.mtc[0-9]*
+
+# --- PDF compilados ---
+# Se ignoran para no subir un binario nuevo en cada cambio.
+# Si quieres versionar el PDF final, borra estas líneas o usa:
+#   git add -f TT1/main.pdf
+TT1/main.pdf
+protocolo/protocolo.pdf
+
+# --- Respaldos y temporales de editores ---
+*.bak
+*.backup
+*.sav
+*~
+*.swp
+*.tmp
+*.tex.bak
+*.tps
+
+# --- Sistema operativo ---
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# --- Sincronización de OneDrive ---
+*.lnk
+~$*
+
+# --- Configuración local de editores ---
+.vscode/
+.idea/
