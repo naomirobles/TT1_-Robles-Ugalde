@@ -65,7 +65,7 @@ La metodología del proyecto seguirá de manera adaptada y práctica las fases d
 
     \item \textbf{Ingeniería de datos (\textit{Data Engineering / Data Preparation})}
 
-    Se partirá del corpus \textit{Propicto-Orfeo}, cuyos textos fuente en francés se traducirán a cinco idiomas con NLLB-200. Antes de traducir el corpus completo se verificará la calidad de la traducción mediante una prueba piloto evaluada con CometKiwi. Cada ejemplo se procesará de forma bidireccional (texto a identificadores e identificadores a texto). Posteriormente, se definirán dos configuraciones de vocabulario: una que conserva el tokenizador original del modelo y otra que agrega como tokens completos los identificadores de pictograma frecuentes.
+    Se partirá del corpus \textit{Propicto-CommonVoice}, cuyos textos fuente en francés se traducirán a cinco idiomas con NLLB-200. Antes de traducir el corpus completo se verificará la calidad de la traducción mediante una prueba piloto evaluada con CometKiwi. Cada ejemplo se procesará de forma bidireccional (texto a identificadores e identificadores a texto). Posteriormente, se definirán dos configuraciones de vocabulario: una que conserva el tokenizador original del modelo y otra que agrega como tokens completos los identificadores de pictograma frecuentes.
 
     En paralelo, se definirá el vocabulario de salida correspondiente a los identificadores de pictogramas ARASAAC. Se estructurará el corpus en particiones de entrenamiento, validación y prueba, garantizando que todas las versiones de una misma oración (sus cinco traducciones y ambas direcciones) pertenezcan a la misma partición, para evitar filtraciones de información.
 

@@ -6,13 +6,13 @@
 Este capítulo y los siguientes describen el desarrollo del proyecto de acuerdo con las fases de la metodología CRISP-ML. En este primer capítulo se aborda la comprensión de los datos: se revisan los conjuntos de datos disponibles para la tarea de texto a pictogramas, se explica la elección del corpus con el que se entrenará el modelo y se describe la fuente del vocabulario de pictogramas, el catálogo de ARASAAC, junto con la forma en que se consulta a través de su API (\textit{Application Programming Interface}, interfaz de programación de aplicaciones).
 
 \subsection{Conjunto de datos de ToPicto}
-El primer conjunto de datos que se analizó es el que proporciona CLEF (\textit{Conference and Labs of the Evaluation Forum}) para la tarea de traducción a pictogramas. Su análisis permitió identificar una característica importante. Se construyó con traducción automática y un conjunto de reglas, y solo una fracción muy pequeña fue anotada por humanos: 1,200 de más de 300 mil registros. % VERIFICAR: esta cifra no coincide con los 528K de Propicto-Orfeo mencionados más abajo; aclarar a qué subconjunto se refiere.
+El primer conjunto de datos que se analizó es el que proporciona CLEF (\textit{Conference and Labs of the Evaluation Forum}) para la tarea de traducción a pictogramas. Su análisis permitió identificar una característica importante. Sus datos provienen de los corpus Propicto \cite{macaire2024}, cuyas secuencias de pictogramas se generaron con un conjunto de reglas, y solo una fracción muy pequeña fue revisada por personas: en \textit{Propicto-Orfeo}, 1,200 de cerca de 290 mil enunciados.
 Al final del proceso, los lemas se asocian con los identificadores de los pictogramas. El flujo completo se muestra en la Figura~\ref{fig:propicto_pipeline}.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.45\textwidth]{img/propicto orfeo pipeline.png}
-    \caption{Flujo seguido para crear el conjunto de datos \textit{Propicto-Orfeo} \cite{macaire2024propicto}. Las oraciones de ejemplo representadas en pictogramas se obtuvieron mediante traducción automática.}
+    \caption{Flujo seguido para crear los corpus Propicto, descrito para \textit{Propicto-Orfeo} \cite{macaire2024propicto}; \textit{Propicto-CommonVoice} se generó con el mismo formalismo de reglas. Las oraciones de ejemplo representadas en pictogramas se obtuvieron mediante traducción automática.}
     \label{fig:propicto_pipeline}
 \end{figure}
 % VERIFICAR: en el documento se usan dos keys distintas, macaire2024 y macaire2024propicto. Unificar.
@@ -49,8 +49,10 @@ Las pruebas con xP3mt orientaron la elección hacia un corpus diseñado específ
     \end{tabularx}
 \end{table}
 
-\subsection{Conjunto de datos elegido: Propicto-Orfeo}
-Se decidió usar \textit{Propicto-Orfeo} \citep{macaire2024propicto}, que está hecho específicamente para la traducción a pictogramas y tiene 528K registros en francés. Cada registro tiene tres campos: el texto fuente (\texttt{src}), la secuencia de términos lematizados (\texttt{tgt}) y la lista de identificadores de pictograma (\texttt{pictos}).
+\subsection{Conjunto de datos elegido: Propicto-CommonVoice}
+La familia de corpus Propicto incluye dos conjuntos en francés construidos con el mismo formalismo de reglas y el mismo vocabulario de ARASAAC \cite{macaire2024, propicto_commonvoice}. \textit{Propicto-Orfeo} contiene cerca de 290 mil enunciados de habla espontánea, es decir, conversaciones reales transcritas. \textit{Propicto-CommonVoice}, construido a partir de la versión 15.0 del corpus Common Voice en francés, contiene cerca de 560 mil enunciados de habla leída: personas que leen en voz alta oraciones escritas \cite{propicto_commonvoice}.
+
+Se decidió usar \textit{Propicto-CommonVoice} por dos razones. Primero, es casi el doble de grande: su partición de entrenamiento tiene 527,554 registros, frente a 231,374 de \textit{Propicto-Orfeo}. Segundo, sus oraciones están escritas y bien formadas, sin titubeos ni repeticiones, por lo que se parecen más a la entrada que recibirá el modelo, ya que el usuario escribe el texto que desea traducir. El corpus mantiene sus particiones originales de entrenamiento, validación y prueba (527,554, 16,132 y 16,132 registros). Cada registro tiene cuatro campos: el identificador del audio (\texttt{clips}), el texto fuente (\texttt{text}), la lista de identificadores de pictograma (\texttt{pictos}) y las palabras clave en francés asociadas a cada pictograma (\texttt{tokens}). En este trabajo se usan \texttt{text} y \texttt{pictos}.
 
 El corpus está en francés; para que el modelo funcione en varios idiomas, el texto fuente se traducirá a otros cinco. Este proceso se describe en la fase de ingeniería de datos (Sección~\ref{sec:seleccion_idiomas}).
 
@@ -133,12 +135,12 @@ Los pictogramas son propiedad del Gobierno de Aragón, su autor es Sergio Palao 
 \label{sec:ingenieria-datos}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-En este capítulo se describe cómo se construye el corpus con el que se entrenará el modelo a partir de \textit{Propicto-Orfeo}. Primero se explica la selección de los idiomas a los que se traduce el corpus, que combina resultados publicados con una prueba piloto propia. Después se presenta el procesamiento bidireccional de cada ejemplo y, por último, el formato final de los datos.
+En este capítulo se describe cómo se construye el corpus con el que se entrenará el modelo a partir de \textit{Propicto-CommonVoice}. Primero se explica la selección de los idiomas a los que se traduce el corpus, que combina resultados publicados con una prueba piloto propia. Después se presenta el procesamiento bidireccional de cada ejemplo y, por último, el formato final de los datos.
  
 \subsection{Selección de idiomas para la traducción del corpus}
 \label{sec:seleccion_idiomas}
  
-El texto fuente de \textit{Propicto-Orfeo} se traducirá a otros idiomas con NLLB-200 en su versión de 3.3B parámetros \cite{nllbteamNoLanguageLeft2022}. Los identificadores de pictograma (\texttt{pictos}) se conservan, porque no dependen del idioma. La columna \texttt{tgt} original no se usa, porque sus términos están en francés.
+El texto fuente de \textit{Propicto-CommonVoice} se traducirá a otros idiomas con NLLB-200 en su versión de 3.3B parámetros \cite{nllbteamNoLanguageLeft2022}. Los identificadores de pictograma (\texttt{pictos}) se conservan, porque no dependen del idioma. La columna \texttt{tokens} no se usa, porque sus palabras clave están en francés.
  
 Traducir el corpus a muchos idiomas es costoso, y cada traducción automática introduce errores que no se pueden revisar a mano. Por eso se eligió un grupo reducido de idiomas con criterios claros y se midió la calidad de la traducción antes de aplicarla a todo el corpus.
  
@@ -152,7 +154,7 @@ Se usaron tres criterios:
     El grupo Helsinki-NLP publica una tabla (\textit{External MT Leaderboard}) con el chrF++ de NLLB-200 para las 202 direcciones que tienen al francés como idioma fuente. % PENDIENTE: agregar la referencia de la tabla de Helsinki-NLP en Zotero.
     Los idiomas se ordenaron de mayor a menor chrF++ y se tomaron como candidatos los 40 primeros.
  
-    Este criterio tiene dos limitaciones. La primera es que FLORES-200 se compone de oraciones de Wikipedia, que son distintas al habla transcrita de \textit{Propicto}. La segunda es que chrF++ no es comparable entre idiomas con sistemas de escritura distintos. Por eso el chrF++ solo se usó para preseleccionar, y la calidad se midió después directamente en nuestros datos con una prueba piloto.
+    Este criterio tiene dos limitaciones. La primera es que FLORES-200 se compone de oraciones de Wikipedia, largas y de tema enciclopédico, distintas a las oraciones de \textit{Propicto-CommonVoice}, que suelen ser más cortas y de temas variados. La segunda es que chrF++ no es comparable entre idiomas con sistemas de escritura distintos. Por eso el chrF++ solo se usó para preseleccionar, y la calidad se midió después directamente en nuestros datos con una prueba piloto.
  
     \item \textbf{Cobertura en Qwen3}: el idioma debe estar entre los 119 del preentrenamiento de Qwen3 \cite{yang2025qwen3}. Si el modelo base apenas conoce un idioma, tendría que aprenderlo además de los pictogramas. Este filtro casi no descartó opciones: de los 40 candidatos, solo unos pocos, como el esperanto, el malgache o el zulú, quedan fuera.
     \item \textbf{Relevancia para el proyecto}: el español por el contexto de este trabajo y el inglés por ser el idioma con más presencia en el preentrenamiento de cualquier LLM.
@@ -161,7 +163,7 @@ Se usaron tres criterios:
 Con estos criterios se preseleccionaron ocho idiomas: español (chrF++ de 50.2), inglés (67.3), alemán (53.2), ruso (48.2), turco (46.5), vietnamita (51.2), hindi (46.4) y árabe (44.3). Se descartaron el japonés y el chino. Qwen3 los maneja bien, pero sus valores de chrF++ (19.9 y 16.7) no sirven para juzgar la traducción: la métrica penaliza las escrituras sin espacios entre palabras. Por la misma razón, chrF++ no sirve para comparar idiomas con escrituras distintas, y fue necesaria una prueba adicional.
  
 \subsubsection{Prueba piloto}
-FLORES-200 se compone de oraciones de Wikipedia, mientras que \textit{Propicto} contiene habla transcrita. Por eso los valores de chrF++ no garantizan la calidad en nuestro dominio. Para medirla directamente se tomó una muestra aleatoria de 200 oraciones de \textit{Propicto-CommonVoice}, con semilla fija, sin duplicados ni oraciones de menos de tres palabras. % VERIFICAR: la muestra es de Propicto-CommonVoice y el corpus final es Propicto-Orfeo; conviene explicar por qué se usó este subconjunto.
+Como las oraciones de FLORES-200 son distintas a las del corpus elegido, los valores de chrF++ no garantizan la calidad en nuestros datos. Para medirla directamente se tomó una muestra aleatoria de 200 oraciones de \textit{Propicto-CommonVoice}, con semilla fija, sin duplicados ni oraciones de menos de tres palabras.
 Cada oración se tradujo a los ocho idiomas con NLLB-200 3.3B (búsqueda por haz de tamaño 4, precisión de 16 bits).
  
 Las 1,600 traducciones se evaluaron con CometKiwi (\texttt{wmt22-cometkiwi-da}) \cite{rei2022cometkiwi}, descrita en la Sección~\ref{par:cometkiwi}. Se eligió esta métrica por dos razones. Primero, no necesita una traducción de referencia, y no existen traducciones humanas de \textit{Propicto} a estos idiomas. Segundo, a diferencia de chrF++, sus valores (de 0 a 1) sí se pueden comparar entre idiomas. Por cada idioma se calculó la media, la mediana, el percentil 10, el porcentaje de traducciones por debajo de 0.70 y un intervalo de confianza al 95\% de la media mediante \textit{bootstrap} con 1,000 remuestreos. Los resultados están en la Tabla~\ref{tab:piloto_cometkiwi}.
@@ -191,7 +193,7 @@ Las 1,600 traducciones se evaluaron con CometKiwi (\texttt{wmt22-cometkiwi-da}) 
 La traducción típica es buena en todos los idiomas, con medianas entre 0.79 y 0.85. El inglés es el mejor: solo el 6\% de sus traducciones queda por debajo de 0.70. Español, alemán, turco, hindi y ruso tienen medias entre 0.776 y 0.785, y sus intervalos de confianza se traslapan casi por completo. Con esta muestra no hay evidencia de que alguno se traduzca mejor que otro. El vietnamita queda un poco por debajo. El árabe es el peor: su intervalo no se traslapa con el del inglés, el 30\% de sus traducciones está por debajo de 0.70 y sus traducciones miden en mediana el 72\% de la oración original (en los demás idiomas, cerca del 90\% o más). Esto sugiere que se omite contenido.
 
 \subsubsection{Decisión}
-Se traducirá el corpus a cinco idiomas: español, inglés, alemán, ruso y turco, cuya calidad de traducción resultó equivalente. Los 528K registros de \textit{Propicto-Orfeo} se reparten en partes iguales entre los cinco idiomas: \textbf{105,600 registros por idioma}. Así se evita el sesgo hacia una sola lengua y el corpus mantiene un tamaño manejable.
+Se traducirá el corpus a cinco idiomas: español, inglés, alemán, ruso y turco, cuya calidad de traducción resultó equivalente. Los 527,554 registros de entrenamiento de \textit{Propicto-CommonVoice} se reparten en partes iguales entre los cinco idiomas: \textbf{unos 105,500 registros por idioma}. Así se evita el sesgo hacia una sola lengua y el corpus mantiene un tamaño manejable.
 
 \subsubsection{Ventajas de entrenar con varios idiomas}
 Entrenar un solo modelo con datos en varios idiomas tiene respaldo en la literatura. En traducción automática, Johnson et al.\ \cite{johnson2017google} mostraron que un único modelo entrenado con varios pares de idiomas a menudo mejora la calidad de todos ellos sin aumentar el número de parámetros, e incluso traduce entre pares que nunca vio durante el entrenamiento. En el ajuste de modelos de lenguaje, Muennighoff et al.\ \cite{muennighoff2022crosslingual} encontraron que ajustar con tareas en varios idiomas mejora el desempeño tanto en inglés como en los demás idiomas, y que el modelo logra generalizar incluso a idiomas que no vio de forma intencional durante el ajuste.
@@ -203,13 +205,13 @@ Con base en estos resultados, se espera que repartir el corpus entre cinco idiom
 \subsection{Procesamiento bidireccional}
 Siguiendo el procedimiento de ConlangBench \citep{jeong_conlangbench_2026}, que duplica cada ejemplo como traducción en ambos sentidos, cada muestra se usa en dos direcciones:
 \begin{itemize}
-    \item \textbf{Directa (texto $\rightarrow$ identificadores):} la tarea principal del sistema. 105,600 ejemplos por idioma.
+    \item \textbf{Directa (texto $\rightarrow$ identificadores):} la tarea principal del sistema. Unos 105,500 ejemplos por idioma.
     \item \textbf{Inversa (identificadores $\rightarrow$ texto):} los mismos ejemplos con los papeles invertidos. Como los identificadores son códigos numéricos sin significado léxico propio, esta dirección sirve para anclar cada identificador al significado del texto en el que aparece, y ayuda al modelo a aprender la relación en ambos sentidos durante el ajuste con LoRA \citep{hu2021lora}.
 \end{itemize}
-Cada idioma aporta 211,200 ejemplos ($105{,}600 \times 2$), y el corpus final tiene \textbf{1,056,000 registros}.
+Cada idioma aporta unos 211 mil ejemplos, y el corpus de entrenamiento final tiene \textbf{alrededor de 1.05 millones de registros}.
 
 \subsection{Formato final}
-Cada ejemplo del corpus tiene dos campos: el texto traducido en \texttt{src} y la lista de identificadores de pictograma en \texttt{pictos}. El modelo aprende a predecir directamente la secuencia de identificadores a partir del texto, sin generar términos intermedios. La columna \texttt{tgt} original de \textit{Propicto-Orfeo} no se usa, porque sus términos están en francés y no son parte de la salida del modelo.
+Cada ejemplo del corpus tiene dos campos: el texto traducido en \texttt{src} y la lista de identificadores de pictograma en \texttt{pictos}. El modelo aprende a predecir directamente la secuencia de identificadores a partir del texto, sin generar términos intermedios. La columna \texttt{tokens} original no se usa, porque sus palabras clave están en francés y no son parte de la salida del modelo.
 
 Por ejemplo, la oración «El niño come una manzana» corresponde a la secuencia \texttt{2345 6789 1234}, donde cada número es el identificador de ARASAAC del pictograma de «niño», «comer» y «manzana», respectivamente.
 % REEMPLAZAR los IDs de ejemplo por los reales..
@@ -277,7 +279,7 @@ La pérdida es la entropía cruzada y se calcula solo sobre la parte de la respu
 
 Al ser un modelo generativo, puede producir identificadores que no existen en ARASAAC. Cada identificador generado se comprueba con el punto de acceso \texttt{GET /pictograms/\{idioma\}/\{id\}} de la API (Sección~\ref{sec:api_arasaac}) y los inexistentes se descartan de la secuencia final.
 
-La Figura~\ref{fig:arquitectura_lora_arasaac} resume el sistema. Primero se construye el corpus: \textit{Propicto-Orfeo} se traduce a cinco idiomas y se procesa en dos direcciones. Después, Qwen3-4B se ajusta con LoRA en las dos configuraciones de vocabulario. Por último, en inferencia, el modelo genera directamente los identificadores de ARASAAC y se descartan los que no existen en el catálogo.
+La Figura~\ref{fig:arquitectura_lora_arasaac} resume el sistema. Primero se construye el corpus: \textit{Propicto-CommonVoice} se traduce a cinco idiomas y se procesa en dos direcciones. Después, Qwen3-4B se ajusta con LoRA en las dos configuraciones de vocabulario. Por último, en inferencia, el modelo genera directamente los identificadores de ARASAAC y se descartan los que no existen en el catálogo.
 
 \begin{figure}[htbp]
   \centering
@@ -299,10 +301,10 @@ La Figura~\ref{fig:arquitectura_lora_arasaac} resume el sistema. Primero se cons
   ]
 
     %%%%%%%%%%%%%%%%%%%% DATASET %%%%%%%%%%%%%%%%%%%%
-    \node (corpus) [data] at (0,0) {\textbf{1. Propicto-Orfeo}\\ 528K registros en franc\'es};
-    \node (trad) [data] at (6.33,0) {\textbf{2. Traducci\'on con NLLB-200}\\ 5 idiomas, 105.6K c/u};
+    \node (corpus) [data] at (0,0) {\textbf{1. Propicto-CommonVoice}\\ 527K registros en franc\'es};
+    \node (trad) [data] at (6.33,0) {\textbf{2. Traducci\'on con NLLB-200}\\ 5 idiomas, $\sim$105K c/u};
     \node (terms) [data] at (12.67,0) {\textbf{3. Identificadores}\\ se usa \texttt{pictos} como salida\\ + direcci\'on inversa ($\times 2$)};
-    \node (dataset) [data, fill=emerald!20] at (19,0) {\textbf{4. Dataset final}\\ ($1.056\text{M}$ registros)\\ \textit{``El ni\~no come una manzana.''}\\ \texttt{2345 6789 1234}};
+    \node (dataset) [data, fill=emerald!20] at (19,0) {\textbf{4. Dataset final}\\ ($\approx 1.05\text{M}$ registros)\\ \textit{``El ni\~no come una manzana.''}\\ \texttt{2345 6789 1234}};
 
     \draw[arrow] (corpus) -- (trad);
     \draw[arrow] (trad) -- (terms);
@@ -369,7 +371,7 @@ La Figura~\ref{fig:arquitectura_lora_arasaac} resume el sistema. Primero se cons
 
   \end{tikzpicture}
   }
-  \caption{Arquitectura del sistema. El corpus \textit{Propicto-Orfeo} se traduce a cinco idiomas y se procesa en dos direcciones ($1.056\text{M}$ registros). Qwen3-4B se ajusta con LoRA en dos configuraciones de vocabulario (A y B) para predecir directamente los identificadores de ARASAAC. En inferencia se descartan los identificadores inexistentes.}
+  \caption{Arquitectura del sistema. El corpus \textit{Propicto-CommonVoice} se traduce a cinco idiomas y se procesa en dos direcciones ($\approx 1.05\text{M}$ registros). Qwen3-4B se ajusta con LoRA en dos configuraciones de vocabulario (A y B) para predecir directamente los identificadores de ARASAAC. En inferencia se descartan los identificadores inexistentes.}
   \label{fig:arquitectura_lora_arasaac}
 \end{figure}
 
@@ -378,7 +380,7 @@ La Figura~\ref{fig:arquitectura_lora_arasaac} resume el sistema. Primero se cons
 
 Para entrenar se necesita una GPU con memoria suficiente para Qwen3-4B en 16 bits (unos 8~GB de pesos) más las activaciones y los parámetros de LoRA. La Tabla~\ref{tab:cloud-services} compara los servicios de cómputo en la nube revisados.
 \clearpage
-% PENDIENTE: indicar qué servicio se eligió y una estimación de horas de GPU para 1.056M registros.
+% PENDIENTE: indicar qué servicio se eligió y una estimación de horas de GPU para ~1.05M registros.
 
 \begin{table}[H]
 \centering
@@ -424,11 +426,11 @@ Se harán tres comparaciones, todas con las mismas métricas y el mismo conjunto
 \end{itemize}
 
 \subsection{Conjunto de prueba con anotación humana}
-De manera complementaria, se contempla construir un conjunto de prueba en español anotado por personas. Las referencias de \textit{Propicto-Orfeo} se generaron con una gramática basada en reglas \cite{macaire2024}, por lo que las métricas descritas miden qué tan bien el modelo reproduce esas reglas. Un conjunto anotado por personas permitiría comparar además las salidas del modelo con las secuencias que una persona elegiría para expresar la misma oración.
+De manera complementaria, se contempla construir un conjunto de prueba en español anotado por personas. Las referencias de \textit{Propicto-CommonVoice} se generaron con una gramática basada en reglas \cite{macaire2024}, por lo que las métricas descritas miden qué tan bien el modelo reproduce esas reglas. Un conjunto anotado por personas permitiría comparar además las salidas del modelo con las secuencias que una persona elegiría para expresar la misma oración.
 
-Para construirlo, participantes voluntarios seleccionarán, mediante una herramienta web sencilla con buscador y categorías de pictogramas de ARASAAC, la secuencia que mejor exprese cada oración. Las oraciones se tomarán del conjunto de prueba de \textit{Propicto-Orfeo} traducido al español, de modo que cada una cuente con dos referencias: la generada por reglas y la elegida por personas. Cada oración será anotada por más de una persona, lo que permitirá medir el grado de acuerdo entre anotadores, y la tarea se apoyará en una guía breve que unifique criterios, por ejemplo, cómo representar el tiempo verbal o qué hacer cuando no existe un pictograma adecuado.
+Para construirlo, participantes voluntarios seleccionarán, mediante una herramienta web sencilla con buscador y categorías de pictogramas de ARASAAC, la secuencia que mejor exprese cada oración. Las oraciones se tomarán del conjunto de prueba de \textit{Propicto-CommonVoice} traducido al español, de modo que cada una cuente con dos referencias: la generada por reglas y la elegida por personas. Cada oración será anotada por más de una persona, lo que permitirá medir el grado de acuerdo entre anotadores, y la tarea se apoyará en una guía breve que unifique criterios, por ejemplo, cómo representar el tiempo verbal o qué hacer cuando no existe un pictograma adecuado.
 
-La evaluación principal del modelo no depende de este conjunto y se realizará con las referencias de \textit{Propicto-Orfeo}. El conjunto con anotación humana se usará únicamente como evaluación complementaria, en la medida en que se complete.
+La evaluación principal del modelo no depende de este conjunto y se realizará con las referencias de \textit{Propicto-CommonVoice}. El conjunto con anotación humana se usará únicamente como evaluación complementaria, en la medida en que se complete.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \clearpage
 \section{Despliegue}
