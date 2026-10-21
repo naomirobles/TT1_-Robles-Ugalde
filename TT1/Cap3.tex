@@ -61,7 +61,7 @@ El corpus está en francés; para que el modelo funcione en varios idiomas, el t
 
 El sistema necesita consultar el catálogo de ARASAAC en tres momentos: (i)~al construir el conjunto de datos, para asociar términos con pictogramas; (ii)~después de la inferencia, para convertir los términos generados por el modelo en identificadores; y (iii)~en la interfaz web, para mostrar las imágenes. Para esto se usa directamente la API REST pública de ARASAAC (\url{https://api.arasaac.org/v1}), sin construir una copia local del catálogo. La Tabla~\ref{tab:api_arasaac} resume los puntos de acceso que se usan.
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \caption{Puntos de acceso de la API de ARASAAC utilizados en el proyecto.}
 \label{tab:api_arasaac}
@@ -102,7 +102,7 @@ Cada pictograma se devuelve como un objeto JSON. Los campos útiles para este tr
 \subsubsection{Ejemplo de consulta}
 El Código~\ref{lst:api_arasaac} muestra cómo se comprueba que un identificador existe, se lee su palabra clave y se obtiene la URL de su imagen.
 
-\begin{lstlisting}[
+\begin{lstlisting}[htbp][
   language=Python,
   basicstyle=\ttfamily\small,
   breaklines=true,
